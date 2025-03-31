@@ -1,7 +1,9 @@
+'use client';
+
 import { Fragment } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
 import { FaCheck, FaChevronDown } from 'react-icons/fa';
-import { GameStatus } from '@/models/Game';
+import { GameStatus } from '@/lib/validators';
 
 interface StatusSelectorProps {
   status: GameStatus;
@@ -9,17 +11,22 @@ interface StatusSelectorProps {
 }
 
 const statusColors = {
-  [GameStatus.WISHLIST]: 'bg-blue-100 text-blue-800',
-  [GameStatus.IN_LIBRARY]: 'bg-gray-100 text-gray-800',
-  [GameStatus.PLAYING]: 'bg-green-100 text-green-800',
-  [GameStatus.PAUSED]: 'bg-yellow-100 text-yellow-800',
-  [GameStatus.DROPPED]: 'bg-red-100 text-red-800',
-  [GameStatus.COMPLETED]: 'bg-purple-100 text-purple-800',
+  'Playing': 'bg-green-100 text-green-800',
+  'Completed': 'bg-blue-100 text-blue-800',
+  'On Hold': 'bg-yellow-100 text-yellow-800',
+  'Dropped': 'bg-red-100 text-red-800',
+  'Plan to Play': 'bg-purple-100 text-purple-800',
 };
 
-const StatusSelector = ({ status, onChange }: StatusSelectorProps) => {
-  const statuses = Object.values(GameStatus);
+const statusOptions: GameStatus[] = [
+  'Playing',
+  'Completed',
+  'On Hold',
+  'Dropped',
+  'Plan to Play',
+];
 
+const StatusSelector = ({ status, onChange }: StatusSelectorProps) => {
   return (
     <Listbox value={status} onChange={onChange}>
       {({ open }) => (
@@ -43,7 +50,7 @@ const StatusSelector = ({ status, onChange }: StatusSelectorProps) => {
             leaveTo="opacity-0"
           >
             <Listbox.Options className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-              {statuses.map((statusOption) => (
+              {statusOptions.map((statusOption) => (
                 <Listbox.Option
                   key={statusOption}
                   className={({ active }) =>

@@ -1,6 +1,7 @@
 import Header from '@/components/Header';
 import Link from 'next/link';
-import { FaGamepad, FaStar, FaList } from 'react-icons/fa';
+import { FaGamepad, FaStar, FaList, FaPlus } from 'react-icons/fa';
+import GameList from '@/components/GameList';
 
 export default function Home() {
   return (
@@ -17,10 +18,10 @@ export default function Home() {
               Your personal database to track, rate, and organize your video game collection.
             </p>
             <div className="mt-10 flex justify-center">
-              <Link href="/games" className="btn btn-secondary mr-4">
+              <Link href="/games" className="btn-primary mr-4">
                 View My Games
               </Link>
-              <Link href="/games/new" className="btn bg-white text-primary-700 hover:bg-gray-100">
+              <Link href="/games/new" className="btn-primary bg-white text-primary-700 hover:bg-gray-100">
                 Add New Game
               </Link>
             </div>
@@ -67,12 +68,26 @@ export default function Home() {
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Organize by Status</h3>
                 <p className="mt-2 text-gray-500 dark:text-gray-400">
-                  Categorize games as Wishlist, In Library, Playing, Paused, Dropped, or Completed.
+                  Categorize games as Playing, Completed, On Hold, Dropped, or Plan to Play.
                 </p>
               </div>
             </div>
           </div>
         </div>
+      </div>
+      
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">My Games</h1>
+          <Link 
+            href="/games/new" 
+            className="btn-primary flex items-center gap-2"
+          >
+            <FaPlus /> Add Game
+          </Link>
+        </div>
+        
+        <GameList />
       </div>
     </main>
   );

@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaSearch } from 'react-icons/fa';
@@ -112,7 +114,7 @@ const SearchBar = () => {
                     </div>
                   ) : (
                     <div className="w-10 h-10 mr-3 bg-gray-200 dark:bg-gray-700 rounded flex-shrink-0 flex items-center justify-center">
-                      <FaGamepad className="text-gray-400" />
+                      <FaSearch className="text-gray-400" />
                     </div>
                   )}
                   <span>{game.title}</span>

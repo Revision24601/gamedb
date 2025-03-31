@@ -1,258 +1,332 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm, Controller } from 'react-hook-form';
-import Header from '@/components/Header';
-import StarRating from '@/components/StarRating';
-import StatusSelector from '@/components/StatusSelector';
-import { GameStatus } from '@/models/Game';
-import { FaSave, FaTimes } from 'react-icons/fa';
+import { useForm } from 'react-hook-form';
+import Link from 'next/link';
+import { FaStar, FaArrowLeft, FaSearch } from 'react-icons/fa';
+import type { IGame } from '@/models/Game';
+import { searchGames, RawgGame, formatGameData } from '@/lib/gameApi';
+import Image from 'next/image';
 
-interface GameFormData {
-  title: string;
-  coverImage?: string;
-  description?: string;
-  releaseDate?: string;
-  developer?: string;
-  publisher?: string;
-  genres?: string;
-  platforms?: string;
-  rating: number;
-  status: GameStatus;
-  notes?: string;
-}
+type GameFormData = Omit<IGame, 'createdAt' | 'updatedAt' | '_id'>;
 
-export default function NewGamePage() {
+const statusOptions = [
+  'Playing',
+  'Completed',
+  'On Hold',
+  'Dropped',
+  'Plan to Play',
+] as const;
+
+export default function NewGame() {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  
-  const { register, handleSubmit, control, formState: { errors } } = useForm<GameFormData>({
-    defaultValues: {
-      title: '',
-      coverImage: '',
-      description: '',
-      releaseDate: '',
-      developer: '',
-      publisher: '',
-      genres: '',
-      platforms: '',
-      rating: 5,
-      status: GameStatus.WISHLIST,
-      notes: '',
+  const [submitting, setSubmitting] = useState(false);
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<GameFormData>();
+
+  // Game search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<RawgGame[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
     }
-  });
-  
-  const onSubmit = async (data: GameFormData) => {
-    setIsSubmitting(true);
-    setError('');
     
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Search for games when query changes
+  useEffect(() => {
+    const performSearch = async () => {
+      if (searchQuery.length < 2) {
+        setSearchResults([]);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const results = await searchGames(searchQuery);
+        setSearchResults(results);
+        setShowResults(true);
+      } catch (error) {
+        console.error('Error searching games:', error);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(performSearch, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
+
+  // Handle selecting a game from search results
+  const handleSelectGame = (game: RawgGame) => {
+    const formattedGame = formatGameData(game);
+    
+    // Set form values
+    setValue('title', formattedGame.title);
+    setValue('platform', formattedGame.platform);
+    setValue('imageUrl', formattedGame.imageUrl);
+    setValue('notes', formattedGame.notes);
+    
+    // Hide search results
+    setShowResults(false);
+    setSearchQuery('');
+  };
+
+  const onSubmit = async (data: GameFormData) => {
     try {
-      // Convert comma-separated strings to arrays
-      const formattedData = {
-        ...data,
-        genres: data.genres ? data.genres.split(',').map(g => g.trim()) : undefined,
-        platforms: data.platforms ? data.platforms.split(',').map(p => p.trim()) : undefined,
-      };
-      
+      setSubmitting(true);
       const response = await fetch('/api/games', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formattedData),
+        body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create game');
+        throw new Error(errorData.error || 'Failed to add game');
       }
-      
-      const newGame = await response.json();
-      router.push(`/games/${newGame._id}`);
-    } catch (err) {
-      console.error('Error creating game:', err);
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+
+      router.push('/');
+      router.refresh();
+    } catch (error) {
+      console.error('Error adding game:', error);
+      alert(error instanceof Error ? error.message : 'Failed to add game. Please try again.');
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
-  
+
   return (
-    <main>
-      <Header />
-      
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Add New Game</h1>
-          
-          <button
-            onClick={() => router.back()}
-            className="btn btn-outline flex items-center"
-          >
-            <FaTimes className="mr-2" />
-            Cancel
-          </button>
-        </div>
-        
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-6">
-            <p className="text-red-600 dark:text-red-400">{error}</p>
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <label htmlFor="title" className="label">
-                Game Title <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="title"
-                type="text"
-                className={`input ${errors.title ? 'border-red-500' : ''}`}
-                {...register('title', { required: 'Title is required' })}
-              />
-              {errors.title && (
-                <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
-              )}
-            </div>
-            
-            <div>
-              <label htmlFor="coverImage" className="label">Cover Image URL</label>
-              <input
-                id="coverImage"
-                type="text"
-                className="input"
-                placeholder="https://example.com/image.jpg"
-                {...register('coverImage')}
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="releaseDate" className="label">Release Date</label>
-              <input
-                id="releaseDate"
-                type="date"
-                className="input"
-                {...register('releaseDate')}
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="developer" className="label">Developer</label>
-              <input
-                id="developer"
-                type="text"
-                className="input"
-                {...register('developer')}
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="publisher" className="label">Publisher</label>
-              <input
-                id="publisher"
-                type="text"
-                className="input"
-                {...register('publisher')}
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="genres" className="label">Genres</label>
-              <input
-                id="genres"
-                type="text"
-                className="input"
-                placeholder="RPG, Action, Adventure (comma separated)"
-                {...register('genres')}
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="platforms" className="label">Platforms</label>
-              <input
-                id="platforms"
-                type="text"
-                className="input"
-                placeholder="PC, PS5, Xbox (comma separated)"
-                {...register('platforms')}
-              />
-            </div>
-            
-            <div>
-              <label className="label">Rating</label>
-              <Controller
-                name="rating"
-                control={control}
-                render={({ field }) => (
-                  <StarRating
-                    rating={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
-            
-            <div>
-              <label className="label">Status</label>
-              <Controller
-                name="status"
-                control={control}
-                render={({ field }) => (
-                  <StatusSelector
-                    status={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
-            
-            <div className="md:col-span-2">
-              <label htmlFor="description" className="label">Description</label>
-              <textarea
-                id="description"
-                rows={4}
-                className="input"
-                {...register('description')}
-              ></textarea>
-            </div>
-            
-            <div className="md:col-span-2">
-              <label htmlFor="notes" className="label">Personal Notes</label>
-              <textarea
-                id="notes"
-                rows={4}
-                className="input"
-                placeholder="Your thoughts, progress, or anything else you want to remember about this game..."
-                {...register('notes')}
-              ></textarea>
-            </div>
-          </div>
-          
-          <div className="mt-8 flex justify-end">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn btn-primary flex items-center"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <FaSave className="mr-2" />
-                  Save Game
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+    <div className="max-w-2xl mx-auto">
+      <div className="mb-6">
+        <Link href="/" className="flex items-center gap-2 text-accent hover:opacity-80">
+          <FaArrowLeft /> Back to Games
+        </Link>
       </div>
-    </main>
+
+      <h1 className="text-3xl font-bold mb-8">Add New Game</h1>
+
+      {/* Game Search */}
+      <div className="mb-8" ref={searchRef}>
+        <label htmlFor="gameSearch" className="block text-sm font-medium mb-1">
+          Search for a game
+        </label>
+        <div className="relative">
+          <input
+            type="text"
+            id="gameSearch"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search for a game (e.g., Skyrim, Halo, etc.)"
+            className="input-field w-full pl-10"
+          />
+          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          
+          {showResults && (
+            <div className="absolute z-10 w-full mt-1 bg-secondary-700 rounded-md shadow-lg max-h-96 overflow-auto">
+              {isSearching ? (
+                <div className="p-4 text-center">
+                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-accent border-r-transparent"></div>
+                  <p className="mt-2 text-sm">Searching...</p>
+                </div>
+              ) : searchResults.length > 0 ? (
+                <ul className="py-2">
+                  {searchResults.map((game) => (
+                    <li
+                      key={game.id}
+                      onClick={() => handleSelectGame(game)}
+                      className="px-4 py-2 hover:bg-secondary-600 cursor-pointer flex items-center"
+                    >
+                      {game.background_image ? (
+                        <div className="w-16 h-12 mr-3 relative flex-shrink-0">
+                          <Image
+                            src={game.background_image}
+                            alt={game.name}
+                            fill
+                            className="object-cover rounded"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-12 mr-3 bg-gray-700 rounded flex-shrink-0 flex items-center justify-center">
+                          <FaSearch className="text-gray-500" />
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-medium">{game.name}</div>
+                        <div className="text-sm text-gray-400">
+                          {game.platforms?.slice(0, 3).map(p => p.platform.name).join(', ')}
+                          {game.platforms && game.platforms.length > 3 && '...'}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="p-4 text-center text-gray-400">
+                  No games found matching "{searchQuery}"
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <p className="text-xs text-gray-400 mt-1">
+          Search for licensed games to auto-fill details
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div>
+          <label htmlFor="title" className="block text-sm font-medium mb-1">
+            Title *
+          </label>
+          <input
+            type="text"
+            id="title"
+            className="input-field w-full"
+            {...register('title', { required: 'Title is required' })}
+          />
+          {errors.title && (
+            <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="platform" className="block text-sm font-medium mb-1">
+            Platform *
+          </label>
+          <input
+            type="text"
+            id="platform"
+            className="input-field w-full"
+            {...register('platform', { required: 'Platform is required' })}
+          />
+          {errors.platform && (
+            <p className="text-red-500 text-sm mt-1">{errors.platform.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="status" className="block text-sm font-medium mb-1">
+            Status
+          </label>
+          <select
+            id="status"
+            className="input-field w-full"
+            {...register('status')}
+          >
+            {statusOptions.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="rating" className="block text-sm font-medium mb-1">
+            Rating
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              id="rating"
+              min="0"
+              max="10"
+              className="input-field w-24"
+              {...register('rating', {
+                valueAsNumber: true,
+                min: { value: 0, message: 'Rating must be between 0 and 10' },
+                max: { value: 10, message: 'Rating must be between 0 and 10' },
+              })}
+            />
+            <FaStar className="text-yellow-400" />
+            <span className="text-sm text-gray-400">/10</span>
+          </div>
+          {errors.rating && (
+            <p className="text-red-500 text-sm mt-1">{errors.rating.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="hoursPlayed" className="block text-sm font-medium mb-1">
+            Hours Played
+          </label>
+          <input
+            type="number"
+            id="hoursPlayed"
+            min="0"
+            className="input-field w-32"
+            {...register('hoursPlayed', {
+              valueAsNumber: true,
+              min: { value: 0, message: 'Hours played cannot be negative' },
+            })}
+          />
+          {errors.hoursPlayed && (
+            <p className="text-red-500 text-sm mt-1">{errors.hoursPlayed.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="imageUrl" className="block text-sm font-medium mb-1">
+            Image URL
+          </label>
+          <input
+            type="url"
+            id="imageUrl"
+            className="input-field w-full"
+            {...register('imageUrl')}
+          />
+          {watch('imageUrl') && (
+            <div className="mt-2 relative w-full h-32">
+              <Image 
+                src={watch('imageUrl') || ''} 
+                alt="Game cover preview" 
+                fill
+                className="object-contain rounded-md"
+              />
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="notes" className="block text-sm font-medium mb-1">
+            Notes
+          </label>
+          <textarea
+            id="notes"
+            rows={4}
+            className="input-field w-full"
+            {...register('notes')}
+          />
+        </div>
+
+        <div className="flex gap-4">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="btn-primary flex-1"
+          >
+            {submitting ? 'Adding...' : 'Add Game'}
+          </button>
+          <Link href="/" className="btn-primary bg-gray-500 flex-1 text-center">
+            Cancel
+          </Link>
+        </div>
+      </form>
+    </div>
   );
 } 

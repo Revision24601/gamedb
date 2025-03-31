@@ -1,0 +1,11 @@
+.next/
+node_modules/
+public/
+*.min.js
+*.d.ts
+package-lock.json
+.github
+.vscode
+build
+dist
+coverage 
