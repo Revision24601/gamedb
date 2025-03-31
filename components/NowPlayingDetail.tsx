@@ -56,10 +56,10 @@ export default function NowPlayingDetail() {
   if (loading) {
     return (
       <div className="my-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-pulse">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 animate-pulse">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-48 rounded-md bg-gray-200 dark:bg-gray-700"></div>
+              <div key={i} className="h-48 rounded-xl bg-gray-200 dark:bg-gray-700"></div>
             ))}
           </div>
         </div>
@@ -70,7 +70,7 @@ export default function NowPlayingDetail() {
   if (error) {
     return (
       <div className="my-8">
-        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg shadow p-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl shadow-sm p-4">
           <p className="text-red-800 dark:text-red-400">{error}</p>
         </div>
       </div>
@@ -80,11 +80,12 @@ export default function NowPlayingDetail() {
   if (games.length === 0) {
     return (
       <div className="my-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 text-center">
+          <FaGamepad className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600 mb-3" />
           <p className="text-gray-500 dark:text-gray-400 mb-4">You don't have any games in progress right now.</p>
           <Link 
             href="/games/new" 
-            className="inline-flex items-center justify-center bg-accent hover:bg-accent-dark text-white font-medium py-2 px-4 rounded-md transition-colors"
+            className="inline-flex items-center justify-center bg-accent hover:bg-accent-dark text-white font-medium py-2 px-4 rounded-xl transition-colors shadow-md hover:shadow-lg"
           >
             Add Your First Game
           </Link>
@@ -100,20 +101,20 @@ export default function NowPlayingDetail() {
           <Link 
             key={game._id} 
             href={`/games/${game._id}`}
-            className="block h-full"
+            className="group"
             data-cy="now-playing-detail-item"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow h-full hover:shadow-md transition-shadow duration-200 overflow-hidden">
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-full hover:shadow-md transition-all duration-300 overflow-hidden transform hover:scale-102 hover:-translate-y-1">
               <div className="flex h-full">
                 {/* Game image or placeholder */}
-                <div className="w-1/3 relative">
+                <div className="w-1/3 relative overflow-hidden">
                   {game.imageUrl ? (
                     <Image 
                       src={game.imageUrl} 
                       alt={game.title} 
                       fill 
                       sizes="33vw"
-                      className="object-cover"
+                      className="object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full bg-gray-200 dark:bg-gray-700">
@@ -123,12 +124,12 @@ export default function NowPlayingDetail() {
                 </div>
                 
                 {/* Game details */}
-                <div className="w-2/3 p-4">
-                  <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-1 line-clamp-2">
+                <div className="w-2/3 p-5">
+                  <h3 className="font-semibold text-lg text-gray-800 dark:text-white mb-1 line-clamp-2 group-hover:text-accent transition-colors">
                     {game.title}
                   </h3>
                   
-                  <div className="space-y-2 mt-2">
+                  <div className="space-y-2 mt-3">
                     <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
                       <span className="inline-block w-20">Platform:</span> 
                       <span className="font-medium text-gray-800 dark:text-gray-200">{game.platform}</span>
@@ -160,10 +161,10 @@ export default function NowPlayingDetail() {
                   </div>
                   
                   {/* Progress bar */}
-                  <div className="mt-3">
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div className="mt-4">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                       <div 
-                        className="bg-accent rounded-full h-2" 
+                        className="bg-accent rounded-full h-2 transition-all duration-500 ease-out" 
                         style={{ width: `${calculateProgress(game)}%` }}
                         data-cy="progress-bar-detail"
                       ></div>

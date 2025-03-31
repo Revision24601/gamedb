@@ -95,15 +95,15 @@ export default function NowPlayingShelf() {
     return (
       <div className="my-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <FaGamepad className="text-accent" /> 
             <span>Now Playing</span>
           </h2>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-pulse">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 animate-pulse">
           <div className="flex space-x-4 overflow-x-auto pb-2">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex-shrink-0 w-48 h-64 rounded-md bg-gray-200 dark:bg-gray-700"></div>
+              <div key={i} className="flex-shrink-0 w-48 h-64 rounded-xl bg-gray-200 dark:bg-gray-700"></div>
             ))}
           </div>
         </div>
@@ -114,7 +114,7 @@ export default function NowPlayingShelf() {
   if (error) {
     return (
       <div className="my-8">
-        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg shadow p-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl shadow-sm p-4">
           <p className="text-red-800 dark:text-red-400">{error}</p>
         </div>
       </div>
@@ -125,16 +125,17 @@ export default function NowPlayingShelf() {
     return (
       <div className="my-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <FaGamepad className="text-accent" /> 
             <span>Now Playing</span>
           </h2>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 text-center">
+          <FaGamepad className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600 mb-3" />
           <p className="text-gray-500 dark:text-gray-400 mb-4">You don't have any games in progress right now.</p>
           <Link 
             href="/games/new" 
-            className="inline-flex items-center justify-center bg-accent hover:bg-accent-dark text-white font-medium py-2 px-4 rounded-md transition-colors"
+            className="inline-flex items-center justify-center bg-accent hover:bg-accent-dark text-white font-medium py-2 px-4 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
           >
             Add Your First Game
           </Link>
@@ -146,22 +147,22 @@ export default function NowPlayingShelf() {
   return (
     <div className="my-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
           <FaGamepad className="text-accent" /> 
           <span>Now Playing</span>
         </h2>
         <Link 
           href="/dashboard" 
-          className="text-accent hover:text-accent-dark flex items-center text-sm font-medium"
+          className="text-accent hover:text-accent-dark flex items-center text-sm font-medium transition-all duration-200 group"
         >
-          View All <FaChevronRight className="ml-1 h-3 w-3" />
+          View All <FaChevronRight className="ml-1 h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
         </Link>
       </div>
       
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div
           ref={scrollContainerRef}
-          className={`flex space-x-4 overflow-x-auto p-4 pb-6 ${scrollbarClass} select-none`}
+          className={`flex space-x-5 overflow-x-auto p-5 pb-6 ${scrollbarClass} select-none`}
           onMouseDown={handleMouseDown}
           onMouseLeave={handleMouseLeave}
           onMouseUp={handleMouseUp}
@@ -175,15 +176,15 @@ export default function NowPlayingShelf() {
               onClick={(e) => isDragging && e.preventDefault()}
               data-cy="now-playing-item"
             >
-              <div className="rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 transition-transform duration-200 transform group-hover:scale-105 shadow">
-                <div className="h-32 bg-gray-200 dark:bg-gray-600 relative">
+              <div className="rounded-xl overflow-hidden bg-gray-100/50 dark:bg-gray-700/50 transition-all duration-300 transform group-hover:scale-103 group-hover:-translate-y-1 shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-700">
+                <div className="h-32 bg-gray-200 dark:bg-gray-600 relative overflow-hidden">
                   {game.imageUrl ? (
                     <Image 
                       src={game.imageUrl} 
                       alt={game.title} 
                       fill 
                       sizes="100%"
-                      className="object-cover"
+                      className="object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full bg-gray-200 dark:bg-gray-700">
@@ -193,7 +194,7 @@ export default function NowPlayingShelf() {
                 </div>
                 
                 <div className="p-4">
-                  <h3 className="font-medium text-gray-900 dark:text-white mb-1" title={game.title}>
+                  <h3 className="font-medium text-gray-800 dark:text-white mb-1 group-hover:text-accent transition-colors" title={game.title}>
                     {truncateTitle(game.title)}
                   </h3>
                   
@@ -208,9 +209,9 @@ export default function NowPlayingShelf() {
                   
                   {/* Progress bar */}
                   <div className="mt-3">
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                       <div 
-                        className="bg-accent rounded-full h-2" 
+                        className="bg-accent rounded-full h-2 transition-all duration-500 ease-out" 
                         style={{ width: `${calculateProgress(game)}%` }}
                         title={`Estimated progress: ${calculateProgress(game)}%`}
                         data-cy="progress-bar"

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FaGamepad, FaChartBar } from 'react-icons/fa';
+import { FaGamepad, FaChartBar, FaChartPie } from 'react-icons/fa';
 import SearchBar from './SearchBar';
 import ThemeToggle from './ThemeToggle';
 
@@ -33,6 +33,12 @@ const Header = () => {
               className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-500 flex items-center"
             >
               <FaChartBar className="mr-1" /> Dashboard
+            </Link>
+            <Link
+              href="/stats"
+              className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-500 flex items-center"
+            >
+              <FaChartPie className="mr-1" /> Stats
             </Link>
             <Link 
               href="/games/new" 

@@ -15,6 +15,7 @@ export async function POST() {
   }
 
   try {
+    // Get the database connection
     const { db } = await connectToDatabase();
     
     // Only clear the games collection (don't delete other collections)

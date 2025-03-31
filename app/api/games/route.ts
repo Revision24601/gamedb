@@ -5,6 +5,7 @@ import { gameCreateSchema, gameSearchSchema } from '@/lib/validators';
 
 export async function GET(request: NextRequest) {
   try {
+    // Establish MongoDB connection
     await dbConnect();
 
     // Parse query parameters
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // First establish the connection
+    // Establish MongoDB connection
     await dbConnect();
 
     // Parse and validate the request body

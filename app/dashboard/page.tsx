@@ -13,7 +13,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { FaGamepad, FaArrowLeft, FaClock, FaChartBar, FaInfoCircle } from 'react-icons/fa';
+import { FaGamepad, FaArrowLeft, FaClock, FaChartBar, FaInfoCircle, FaBookOpen } from 'react-icons/fa';
 import Header from '@/components/Header';
 import NowPlayingDetail from '@/components/NowPlayingDetail';
 import type { IGame } from '@/models/Game';
@@ -174,19 +174,22 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between">
           <div>
-            <Link href="/" className="text-accent hover:text-accent-dark flex items-center gap-1 mb-2">
-              <FaArrowLeft className="text-sm" />
-              <span>Back to Games</span>
+            <Link href="/" className="text-accent hover:text-accent-dark flex items-center gap-1 mb-3 transition-all duration-200 group">
+              <FaArrowLeft className="text-sm transition-transform group-hover:-translate-x-1" />
+              <span>Back to Home</span>
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <FaChartBar className="text-accent" />
-              Gaming Dashboard
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
+              <FaBookOpen className="text-accent" />
+              <span>My Gaming Journal</span>
             </h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-2 max-w-2xl">
+              Track your gaming journey, see your progress, and reminisce about your adventures.
+            </p>
           </div>
         </div>
 
@@ -195,17 +198,17 @@ export default function Dashboard() {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent"></div>
           </div>
         ) : error ? (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-xl">
             <p className="text-red-800 dark:text-red-400">{error}</p>
           </div>
         ) : (
           <>
             {/* Stats Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
               {/* Total Games Card */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-transform hover:scale-102 hover:shadow-md">
                 <div className="flex items-center gap-4">
-                  <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-full">
+                  <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-xl">
                     <FaGamepad className="text-indigo-500 text-xl" />
                   </div>
                   <div>
@@ -220,9 +223,9 @@ export default function Dashboard() {
               </div>
 
               {/* Completed Games Card */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-transform hover:scale-102 hover:shadow-md">
                 <div className="flex items-center gap-4">
-                  <div className="bg-green-50 dark:bg-green-900/30 p-3 rounded-full">
+                  <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-xl">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
@@ -239,9 +242,9 @@ export default function Dashboard() {
               </div>
 
               {/* Average Rating Card */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-transform hover:scale-102 hover:shadow-md">
                 <div className="flex items-center gap-4">
-                  <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-full">
+                  <div className="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-xl">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
@@ -258,9 +261,9 @@ export default function Dashboard() {
               </div>
 
               {/* Hours Playing Card */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-transform hover:scale-102 hover:shadow-md">
                 <div className="flex items-center gap-4">
-                  <div className="bg-accent/10 p-3 rounded-full">
+                  <div className="bg-accent/10 p-4 rounded-xl">
                     <FaClock className="text-accent text-xl" />
                   </div>
                   <div>
@@ -276,10 +279,10 @@ export default function Dashboard() {
             </div>
 
             {/* Section title for Now Playing games */}
-            <div className="flex items-center justify-between mb-4 mt-12">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <FaGamepad className="text-accent" /> 
-                <span>Currently Playing Games</span>
+            <div className="flex items-center mb-6 mt-12 border-b border-gray-200 dark:border-gray-700 pb-2">
+              <FaGamepad className="text-accent mr-3 text-xl" /> 
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+                Currently Playing
               </h2>
             </div>
 
@@ -288,12 +291,15 @@ export default function Dashboard() {
 
             {/* Platform Insight (appears only if there are games) */}
             {games.length > 0 && statsData.mostPlayedPlatform && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 my-8">
-                <div className="flex items-start gap-3">
-                  <FaInfoCircle className="text-accent mt-1 flex-shrink-0" />
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 my-10">
+                <div className="flex items-start gap-4">
+                  <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-xl">
+                    <FaInfoCircle className="text-blue-500" />
+                  </div>
                   <div>
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-1">Gaming Insights</h3>
                     <p className="text-gray-700 dark:text-gray-300">
-                      <span className="font-medium">{statsData.mostPlayedPlatform}</span> is your most played platform with {allGames.filter(g => g.platform === statsData.mostPlayedPlatform).length} games. 
+                      <span className="font-medium text-accent">{statsData.mostPlayedPlatform}</span> is your favorite platform with {allGames.filter(g => g.platform === statsData.mostPlayedPlatform).length} games. 
                       {games.length > 0 && ` You're currently playing ${games.length} ${games.length === 1 ? 'game' : 'games'}.`}
                     </p>
                   </div>
@@ -302,8 +308,9 @@ export default function Dashboard() {
             )}
 
             {/* Games Bar Chart */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 mb-8">
-              <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-10">
+              <h2 className="text-xl font-semibold mb-6 text-gray-800 dark:text-white flex items-center">
+                <FaChartBar className="text-accent mr-2" />
                 Hours Played Distribution
               </h2>
               
@@ -364,7 +371,7 @@ export default function Dashboard() {
                       dataKey="hours" 
                       name="Hours Played" 
                       fill="#6366f1" 
-                      radius={[4, 4, 0, 0]}
+                      radius={[6, 6, 0, 0]}
                       className="hover:opacity-80 transition-opacity"
                       animationDuration={1000}
                     />
@@ -374,18 +381,19 @@ export default function Dashboard() {
             </div>
 
             {/* Game List Table (mobile-friendly alternative) */}
-            <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-              <div className="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            <div className="mt-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
+                  <FaGamepad className="text-accent mr-2" />
                   Playing Games List
                 </h3>
                 <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
-                  Tabular view of your active games
+                  Games you're currently exploring
                 </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
+                  <thead className="bg-gray-50/80 dark:bg-gray-700/80">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Game
@@ -398,18 +406,18 @@ export default function Dashboard() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {games.map((game) => (
-                      <tr key={game._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <tr key={game._id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Link href={`/games/${game._id}`} className="text-accent hover:underline">
+                          <Link href={`/games/${game._id}`} className="text-accent hover:underline font-medium">
                             {game.title}
                           </Link>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                           {game.platform}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-700 dark:text-gray-300">
                           {game.hoursPlayed?.toFixed(1) || 0}
                         </td>
                       </tr>
