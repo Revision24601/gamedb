@@ -9,10 +9,25 @@ export const gameStatusEnum = z.enum([
   'Plan to Play',
 ]);
 
+// Platform validation
+export const gamePlatformEnum = z.enum([
+  'PC',
+  'PlayStation 5',
+  'PlayStation 4',
+  'Xbox Series X/S',
+  'Xbox One',
+  'Nintendo Switch',
+  'MacOS',
+  'Linux',
+  'iOS',
+  'Android',
+  'Other',
+]);
+
 // Game schema validation for creation
 export const gameCreateSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title is too long'),
-  platform: z.string().min(1, 'Platform is required').max(100, 'Platform name is too long'),
+  platform: gamePlatformEnum,
   status: gameStatusEnum.default('Plan to Play'),
   rating: z.number().min(0).max(10).default(0),
   hoursPlayed: z.number().min(0).default(0),
@@ -43,6 +58,7 @@ export const gameIdSchema = z.object({
 
 // Types derived from the schemas
 export type GameStatus = z.infer<typeof gameStatusEnum>;
+export type GamePlatform = z.infer<typeof gamePlatformEnum>;
 export type GameCreate = z.infer<typeof gameCreateSchema>;
 export type GameUpdate = z.infer<typeof gameUpdateSchema>;
 export type GameSearch = z.infer<typeof gameSearchSchema>;

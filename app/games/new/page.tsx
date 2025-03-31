@@ -8,16 +8,14 @@ import { FaStar, FaArrowLeft, FaSearch } from 'react-icons/fa';
 import type { IGame } from '@/models/Game';
 import { searchGames, RawgGame, formatGameData } from '@/lib/gameApi';
 import Image from 'next/image';
+import { gamePlatformEnum, gameStatusEnum } from '@/lib/validators';
 
 type GameFormData = Omit<IGame, 'createdAt' | 'updatedAt' | '_id'>;
 
-const statusOptions = [
-  'Playing',
-  'Completed',
-  'On Hold',
-  'Dropped',
-  'Plan to Play',
-] as const;
+const statusOptions = Object.values(gameStatusEnum.enum);
+
+// Get platform options from the Zod enum
+const platformOptions = Object.values(gamePlatformEnum.enum);
 
 export default function NewGame() {
   const router = useRouter();
@@ -75,7 +73,40 @@ export default function NewGame() {
     
     // Set form values
     setValue('title', formattedGame.title);
-    setValue('platform', formattedGame.platform);
+    
+    // Find the most appropriate platform from our dropdown options
+    if (formattedGame.platform) {
+      const platformLower = formattedGame.platform.toLowerCase();
+      let selectedPlatform = 'Other';
+      
+      // Try to find a matching platform
+      for (const platform of platformOptions) {
+        if (platformLower.includes(platform.toLowerCase())) {
+          selectedPlatform = platform;
+          break;
+        }
+      }
+      
+      // Special case mappings
+      if (platformLower.includes('playstation 4') || platformLower.includes('ps4')) {
+        selectedPlatform = 'PlayStation 4';
+      } else if (platformLower.includes('playstation 5') || platformLower.includes('ps5')) {
+        selectedPlatform = 'PlayStation 5';
+      } else if (platformLower.includes('xbox one')) {
+        selectedPlatform = 'Xbox One';
+      } else if (platformLower.includes('xbox series')) {
+        selectedPlatform = 'Xbox Series X/S';
+      } else if (platformLower.includes('switch')) {
+        selectedPlatform = 'Nintendo Switch';
+      } else if (platformLower.includes('windows') || platformLower.includes('pc')) {
+        selectedPlatform = 'PC';
+      } else if (platformLower.includes('mac') || platformLower.includes('macos') || platformLower.includes('os x')) {
+        selectedPlatform = 'MacOS';
+      }
+      
+      setValue('platform', selectedPlatform);
+    }
+    
     setValue('imageUrl', formattedGame.imageUrl);
     setValue('notes', formattedGame.notes);
     
@@ -208,12 +239,18 @@ export default function NewGame() {
           <label htmlFor="platform" className="block text-sm font-medium mb-1">
             Platform *
           </label>
-          <input
-            type="text"
+          <select
             id="platform"
             className="input-field w-full"
             {...register('platform', { required: 'Platform is required' })}
-          />
+          >
+            <option value="" disabled>Select a platform</option>
+            {platformOptions.map((platform) => (
+              <option key={platform} value={platform}>
+                {platform}
+              </option>
+            ))}
+          </select>
           {errors.platform && (
             <p className="text-red-500 text-sm mt-1">{errors.platform.message}</p>
           )}

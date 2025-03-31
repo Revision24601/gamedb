@@ -8,18 +8,16 @@ import Image from 'next/image';
 import { FaStar, FaArrowLeft } from 'react-icons/fa';
 import type { IGame } from '@/models/Game';
 import Header from '@/components/Header';
+import { gamePlatformEnum, gameStatusEnum } from '@/lib/validators';
 
 type GameStatus = 'Playing' | 'Completed' | 'On Hold' | 'Dropped' | 'Plan to Play';
 
 type GameFormData = Omit<IGame, 'createdAt' | 'updatedAt' | '_id'>;
 
-const statusOptions = [
-  'Playing',
-  'Completed',
-  'On Hold',
-  'Dropped',
-  'Plan to Play',
-] as const;
+const statusOptions = Object.values(gameStatusEnum.enum);
+
+// Get platform options from the Zod enum
+const platformOptions = Object.values(gamePlatformEnum.enum);
 
 export default function EditGamePage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -151,12 +149,18 @@ export default function EditGamePage({ params }: { params: { id: string } }) {
             <label htmlFor="platform" className="block text-sm font-medium mb-1">
               Platform *
             </label>
-            <input
-              type="text"
+            <select
               id="platform"
               className="input-field w-full"
               {...register('platform', { required: 'Platform is required' })}
-            />
+            >
+              <option value="" disabled>Select a platform</option>
+              {platformOptions.map((platform) => (
+                <option key={platform} value={platform}>
+                  {platform}
+                </option>
+              ))}
+            </select>
             {errors.platform && (
               <p className="text-red-500 text-sm mt-1">{errors.platform.message}</p>
             )}
