@@ -2,6 +2,7 @@ import Header from '@/components/Header';
 import Link from 'next/link';
 import { FaGamepad, FaStar, FaList, FaPlus } from 'react-icons/fa';
 import GameList from '@/components/GameList';
+import NowPlayingShelf from '@/components/NowPlayingShelf';
 
 export default function Home() {
   return (
@@ -76,18 +77,23 @@ export default function Home() {
         </div>
       </div>
       
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">My Games</h1>
-          <Link 
-            href="/games/new" 
-            className="btn-primary flex items-center gap-2"
-          >
-            <FaPlus /> Add Game
-          </Link>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Now Playing Shelf */}
+        <NowPlayingShelf />
         
-        <GameList />
+        <div className="space-y-6 mt-12">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Games</h1>
+            <Link 
+              href="/games/new" 
+              className="btn-primary flex items-center gap-2"
+            >
+              <FaPlus /> Add Game
+            </Link>
+          </div>
+          
+          <GameList />
+        </div>
       </div>
     </main>
   );

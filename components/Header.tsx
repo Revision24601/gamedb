@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { FaGamepad, FaChartBar } from 'react-icons/fa';
 import SearchBar from './SearchBar';
+import ThemeToggle from './ThemeToggle';
 
 const Header = () => {
   return (
@@ -39,6 +40,7 @@ const Header = () => {
             >
               Add Game
             </Link>
+            <ThemeToggle />
           </div>
         </div>
       </div>

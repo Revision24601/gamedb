@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { FaGamepad, FaArrowLeft, FaClock, FaChartBar, FaInfoCircle } from 'react-icons/fa';
 import Header from '@/components/Header';
+import NowPlayingDetail from '@/components/NowPlayingDetail';
 import type { IGame } from '@/models/Game';
 
 export default function Dashboard() {
@@ -274,159 +275,149 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Playing Games Section */}
-            {games.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-10 text-center">
-                <FaGamepad className="text-gray-400 text-6xl mx-auto mb-4" />
-                <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-                  No Games Currently Being Played
-                </h2>
-                <p className="text-gray-500 dark:text-gray-400 mb-6">
-                  When you start playing games, they'll appear here with their play time.
-                </p>
-                <Link 
-                  href="/games/new" 
-                  className="inline-flex items-center justify-center bg-accent hover:bg-accent-dark text-white font-medium py-2 px-4 rounded-md transition-colors"
-                >
-                  Add Your First Game
-                </Link>
-              </div>
-            ) : (
-              <>
-                {/* Platform Insight */}
-                {statsData.mostPlayedPlatform && (
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-8">
-                    <div className="flex items-start gap-3">
-                      <FaInfoCircle className="text-accent mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-gray-700 dark:text-gray-300">
-                          <span className="font-medium">{statsData.mostPlayedPlatform}</span> is your most played platform with {allGames.filter(g => g.platform === statsData.mostPlayedPlatform).length} games. 
-                          {games.length > 0 && ` You're currently playing ${games.length} ${games.length === 1 ? 'game' : 'games'}.`}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+            {/* Section title for Now Playing games */}
+            <div className="flex items-center justify-between mb-4 mt-12">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <FaGamepad className="text-accent" /> 
+                <span>Currently Playing Games</span>
+              </h2>
+            </div>
 
-                {/* Games Bar Chart */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 mb-8">
-                  <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">
-                    Currently Playing Games
-                  </h2>
-                  
-                  <div className="h-80 md:h-96">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={chartData}
-                        margin={{ 
-                          top: 10, 
-                          right: windowWidth < 640 ? 5 : 10, 
-                          left: windowWidth < 640 ? 5 : 10, 
-                          bottom: windowWidth < 640 ? 80 : 50 
-                        }}
-                        layout={windowWidth < 640 ? "vertical" : "horizontal"}
-                        onClick={handleBarClick}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                        {windowWidth < 640 ? (
-                          // Mobile view - Horizontal bars (vertical layout)
-                          <>
-                            <XAxis type="number" />
-                            <YAxis 
-                              dataKey="name" 
-                              type="category" 
-                              width={100}
-                              tick={{ fontSize: 12 }}
-                            />
-                          </>
-                        ) : (
-                          // Desktop view - Vertical bars (horizontal layout)
-                          <>
-                            <XAxis 
-                              dataKey="name" 
-                              angle={-45} 
-                              textAnchor="end" 
-                              tick={{ fontSize: 12 }}
-                              interval={0}
-                              height={70}
-                            />
-                            <YAxis 
-                              label={{ 
-                                value: 'Hours Played', 
-                                angle: -90, 
-                                position: 'insideLeft',
-                                style: { textAnchor: 'middle' }
-                              }} 
-                              allowDecimals={false}
-                            />
-                          </>
-                        )}
-                        <Tooltip 
-                          content={<CustomTooltip />} 
-                          cursor={<CustomCursor />}
-                        />
-                        <Legend wrapperStyle={{ paddingTop: 10 }} />
-                        <Bar 
-                          dataKey="hours" 
-                          name="Hours Played" 
-                          fill="#6366f1" 
-                          radius={[4, 4, 0, 0]}
-                          className="hover:opacity-80 transition-opacity"
-                          animationDuration={1000}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
+            {/* Now Playing Detail Component */}
+            <NowPlayingDetail />
 
-                {/* Game List Table (mobile-friendly alternative) */}
-                <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                  <div className="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                      Playing Games List
-                    </h3>
-                    <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
-                      Tabular view of your active games
+            {/* Platform Insight (appears only if there are games) */}
+            {games.length > 0 && statsData.mostPlayedPlatform && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 my-8">
+                <div className="flex items-start gap-3">
+                  <FaInfoCircle className="text-accent mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      <span className="font-medium">{statsData.mostPlayedPlatform}</span> is your most played platform with {allGames.filter(g => g.platform === statsData.mostPlayedPlatform).length} games. 
+                      {games.length > 0 && ` You're currently playing ${games.length} ${games.length === 1 ? 'game' : 'games'}.`}
                     </p>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                      <thead className="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Game
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Platform
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Hours
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        {games.map((game) => (
-                          <tr key={game._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <Link href={`/games/${game._id}`} className="text-accent hover:underline">
-                                {game.title}
-                              </Link>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              {game.platform}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
-                              {game.hoursPlayed?.toFixed(1) || 0}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
                 </div>
-              </>
+              </div>
             )}
+
+            {/* Games Bar Chart */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 mb-8">
+              <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">
+                Hours Played Distribution
+              </h2>
+              
+              <div className="h-80 md:h-96">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartData}
+                    margin={{ 
+                      top: 10, 
+                      right: windowWidth < 640 ? 5 : 10, 
+                      left: windowWidth < 640 ? 5 : 10, 
+                      bottom: windowWidth < 640 ? 80 : 50 
+                    }}
+                    layout={windowWidth < 640 ? "vertical" : "horizontal"}
+                    onClick={handleBarClick}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                    {windowWidth < 640 ? (
+                      // Mobile view - Horizontal bars (vertical layout)
+                      <>
+                        <XAxis type="number" />
+                        <YAxis 
+                          dataKey="name" 
+                          type="category" 
+                          width={100}
+                          tick={{ fontSize: 12 }}
+                        />
+                      </>
+                    ) : (
+                      // Desktop view - Vertical bars (horizontal layout)
+                      <>
+                        <XAxis 
+                          dataKey="name" 
+                          angle={-45} 
+                          textAnchor="end" 
+                          tick={{ fontSize: 12 }}
+                          interval={0}
+                          height={70}
+                        />
+                        <YAxis 
+                          label={{ 
+                            value: 'Hours Played', 
+                            angle: -90, 
+                            position: 'insideLeft',
+                            style: { textAnchor: 'middle' }
+                          }} 
+                          allowDecimals={false}
+                        />
+                      </>
+                    )}
+                    <Tooltip 
+                      content={<CustomTooltip />} 
+                      cursor={<CustomCursor />}
+                    />
+                    <Legend wrapperStyle={{ paddingTop: 10 }} />
+                    <Bar 
+                      dataKey="hours" 
+                      name="Hours Played" 
+                      fill="#6366f1" 
+                      radius={[4, 4, 0, 0]}
+                      className="hover:opacity-80 transition-opacity"
+                      animationDuration={1000}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Game List Table (mobile-friendly alternative) */}
+            <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+              <div className="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  Playing Games List
+                </h3>
+                <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                  Tabular view of your active games
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Game
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Platform
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Hours
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {games.map((game) => (
+                      <tr key={game._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Link href={`/games/${game._id}`} className="text-accent hover:underline">
+                            {game.title}
+                          </Link>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                          {game.platform}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
+                          {game.hoursPlayed?.toFixed(1) || 0}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </>
         )}
       </div>
