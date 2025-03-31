@@ -47,10 +47,9 @@ export default function NowPlayingDetail() {
   };
 
   // Function to format date
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: Date | string) => {
     if (!dateString) return 'Unknown';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(dateString).toLocaleDateString();
   };
 
   if (loading) {
