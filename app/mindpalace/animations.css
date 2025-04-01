@@ -1,5 +1,55 @@
 /* Animations for Mind Palace components */
 
+/* Background gradient animation */
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 400% 400%;
+  animation: gradientFlow 15s ease infinite;
+}
+
+/* Grid pattern background */
+.bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Parallax layers animation */
+@keyframes floatBackground {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-10px) translateX(5px);
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+}
+
+.parallax-layer-1 {
+  animation: floatBackground 20s ease-in-out infinite;
+}
+
+.parallax-layer-2 {
+  animation: floatBackground 15s ease-in-out infinite reverse;
+}
+
+.parallax-layer-3 {
+  animation: floatBackground 25s ease-in-out infinite;
+}
+
 /* Basic fade in animation */
 @keyframes fadeIn {
   from {
@@ -28,6 +78,104 @@
 
 .animate-zoomIn {
   animation: zoomIn 0.3s ease-out;
+}
+
+/* Modal fade in/out animations */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+.animate-modalFadeIn {
+  animation: modalFadeIn 0.4s ease-out;
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+}
+
+.animate-modalFadeOut {
+  animation: modalFadeOut 0.6s ease-in forwards;
+}
+
+/* Modal content entry/exit animations */
+@keyframes modalContentEntry {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-modalContentEntry {
+  animation: modalContentEntry 0.4s ease-out;
+}
+
+@keyframes modalContentExit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+
+.animate-modalContentExit {
+  animation: modalContentExit 0.5s ease-in forwards;
+}
+
+/* Page transitions */
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-pageIn {
+  animation: pageIn 0.5s ease-out;
+}
+
+@keyframes pageOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pageOut {
+  animation: pageOut 0.7s ease-in forwards;
+}
+
+/* Body transition class */
+body.page-transitioning {
+  overflow: hidden;
 }
 
 /* Floating animation for room cards */
@@ -62,6 +210,37 @@
 
 .animate-pulse {
   animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Vertical slide animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s ease-out 0.2s both;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.4s ease-out;
 }
 
 /* Rotation animation for icons */
@@ -195,4 +374,21 @@
 .webgl-pagination {
   position: relative;
   z-index: 2;
+}
+
+/* Add room card exit animation */
+@keyframes roomCardExit {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-15px) scale(1.05);
+    opacity: 0;
+  }
+}
+
+.animate-roomCardExit {
+  animation: roomCardExit 0.4s ease-in forwards;
+  pointer-events: none;
 } 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { FaGamepad, FaStar, FaArrowRight } from 'react-icons/fa';
 import { Room, BaseMindPalaceProps, getRoomBackground } from '../types';
 import { IGame } from '@/models/Game';
@@ -57,39 +57,97 @@ const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
   animationConfig,
   renderMode = 'static'
 }) => {
+  // Refs for focus management
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const enterRoomButtonRef = useRef<HTMLButtonElement>(null);
+  
+  // Handle ESC key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    // Focus the modal when it opens
+    if (closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+  
+  // Handle focus trapping
+  useEffect(() => {
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key === 'Tab' && modalRef.current) {
+        // Get all focusable elements
+        const focusableElements = modalRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        
+        if (focusableElements.length === 0) return;
+        
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+        
+        // If shift + tab and on first element, move to last element
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        } 
+        // If tab and on last element, move to first element
+        else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleTabKey);
+    return () => window.removeEventListener('keydown', handleTabKey);
+  }, []);
+
   // Get the icon component for the room type
   const RoomIcon = iconComponents[room.type] || iconComponents.default;
   
   // Get container classes based on render mode and transition state
   const getContainerClasses = () => {
     const baseClasses = `fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50`;
+    const transitionClasses = isTransitioning ? 'animate-modalFadeOut' : 'animate-modalFadeIn';
     
     switch (renderMode) {
       case 'static':
-        return baseClasses;
+        return `${baseClasses} ${transitionClasses}`;
       case '2d-animated':
-        return `${baseClasses} animate-fadeIn`;
+        return `${baseClasses} ${transitionClasses}`;
       case 'webgl':
-        return `${baseClasses} webgl-modal-backdrop`;
+        return `${baseClasses} webgl-modal-backdrop ${transitionClasses}`;
       default:
-        return baseClasses;
+        return `${baseClasses} ${transitionClasses}`;
     }
   };
   
   // Get modal panel classes
   const getModalClasses = () => {
-    const baseClasses = `max-w-lg w-full m-4 transition-all duration-500 ${isTransitioning ? 'scale-110 opacity-0' : 'scale-100 opacity-100'} 
+    const baseClasses = `max-w-lg w-full m-4 transition-all duration-500 
     relative overflow-hidden rounded-2xl border-2 border-white/20 bg-white/90 dark:bg-gray-800/90 p-8 backdrop-blur-sm shadow-2xl`;
+    
+    const transitionClasses = isTransitioning 
+      ? 'animate-modalContentExit' 
+      : 'animate-zoomIn';
     
     switch (renderMode) {
       case 'static':
-        return baseClasses;
+        return `${baseClasses} ${transitionClasses}`;
       case '2d-animated':
-        return `${baseClasses} animate-zoomIn`;
+        return `${baseClasses} ${transitionClasses}`;
       case 'webgl':
-        return `${baseClasses} webgl-modal`;
+        return `${baseClasses} webgl-modal ${transitionClasses}`;
       default:
-        return baseClasses;
+        return `${baseClasses} ${transitionClasses}`;
     }
   };
   
@@ -113,12 +171,30 @@ const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
     }
   }, [renderMode]);
 
+  // Get appropriate modal container classes
+  const getModalContainerClasses = () => {
+    const baseClasses = `fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm animate-modalFadeIn`;
+    const transitionClasses = isTransitioning ? 'animate-modalFadeOut' : 'animate-modalFadeIn';
+    
+    switch (renderMode) {
+      case 'static':
+        return `${baseClasses} ${transitionClasses}`;
+      case '2d-animated':
+        return `${baseClasses} ${transitionClasses}`;
+      case 'webgl':
+        return `${baseClasses} webgl-modal-backdrop ${transitionClasses}`;
+      default:
+        return `${baseClasses} ${transitionClasses}`;
+    }
+  };
+  
   return (
     <div 
-      className={getContainerClasses()}
+      className={getModalContainerClasses()}
       onClick={onClose}
-      data-room-id={room.id}
-      data-room-type={room.type}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
     >
       {/* WebGL canvas - hidden in static mode */}
       {renderMode === 'webgl' && (
@@ -133,7 +209,18 @@ const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
       <div 
         className={getModalClasses()}
         onClick={(e) => e.stopPropagation()}
+        ref={modalRef}
       >
+        {/* Close Button */}
+        <button 
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-gray-300/50 dark:bg-gray-700/50 flex items-center justify-center hover:bg-accent hover:text-white transition-colors text-gray-700 dark:text-gray-300"
+          onClick={onClose}
+          aria-label="Close modal"
+          ref={closeButtonRef}
+        >
+          ×
+        </button>
+        
         {/* Decorative corners */}
         <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-accent/30 rounded-tl-xl"></div>
         <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-accent/30 rounded-tr-xl"></div>
@@ -211,11 +298,11 @@ const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
               )}
             </div>
             
-            {/* Entering Room Message */}
+            {/* Entering Room Message - with enhanced animation */}
             {isTransitioning && (
-              <div className="absolute inset-0 bg-accent/90 flex flex-col items-center justify-center text-white transition-opacity duration-500">
+              <div className="absolute inset-0 bg-accent/90 flex flex-col items-center justify-center text-white animate-fadeIn">
                 <div className="animate-pulse text-2xl mb-2">Entering Room...</div>
-                <div className="text-sm">Traveling to {game.title}</div>
+                <div className="text-sm animate-slideUp">Traveling to {game.title}</div>
               </div>
             )}
           </div>
@@ -242,8 +329,9 @@ const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
         <div className="flex justify-end">
           {game ? (
             <button 
-              className="px-5 py-2.5 bg-gradient-to-r from-accent to-accent/80 text-white rounded-lg flex items-center shadow-lg hover:shadow-accent/20 transition-all"
+              className="mt-4 px-4 py-2 bg-accent text-white rounded-lg flex items-center justify-center hover:bg-accent/90 transition-colors"
               onClick={onEnterRoom}
+              ref={enterRoomButtonRef}
             >
               Enter Room <FaArrowRight className="ml-2" />
             </button>

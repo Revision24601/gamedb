@@ -11,6 +11,8 @@ import MindPalaceIntro from './components/MindPalaceIntro';
 import RoomGrid from './components/RoomGrid';
 import Pagination from './components/Pagination';
 import RoomDetailModal from './components/RoomDetailModal';
+import AnimatedBackground from './components/AnimatedBackground';
+import KeyboardHelper from './components/KeyboardHelper';
 
 // Import room types and interfaces
 import { Room, RoomType, RenderMode, AnimationConfig } from './types';
@@ -48,6 +50,11 @@ export default function MindPalace() {
     duration: 300,
     easing: 'ease-in-out'
   });
+  
+  // Background style options
+  const [backgroundStyle, setBackgroundStyle] = useState<'gradient' | 'parallax'>('gradient');
+  const [backgroundTheme, setBackgroundTheme] = useState<'default' | 'cool' | 'warm' | 'neutral'>('default');
+  const [backgroundIntensity, setBackgroundIntensity] = useState<'low' | 'medium' | 'high'>('medium');
   
   // Fetch games when component mounts
   useEffect(() => {
@@ -167,7 +174,7 @@ export default function MindPalace() {
             setSelectedRoom(null);
             setSelectedGame(null);
           }, 400);
-        }, 1500);
+        }, 1000); // Reduced from 1500ms to 1000ms for a more responsive feel
       } else {
         // If no game, just show room details
         setSelectedRoom(room);
@@ -179,6 +186,9 @@ export default function MindPalace() {
   // Navigate directly to a game's detail page (used for "Enter Room" button)
   const navigateToGame = (e: React.MouseEvent, gameId: string) => {
     e.stopPropagation();
+    
+    // Apply page transition animation
+    document.body.classList.add('page-transitioning');
     setIsTransitioning(true);
     setTransitionGameId(gameId);
   };
@@ -195,6 +205,27 @@ export default function MindPalace() {
   const toggleInfoTip = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowInfoTip(!showInfoTip);
+  };
+  
+  // Toggle background style
+  const toggleBackgroundStyle = () => {
+    setBackgroundStyle(prev => prev === 'gradient' ? 'parallax' : 'gradient');
+  };
+  
+  // Cycle through background themes
+  const cycleBackgroundTheme = () => {
+    const themes: ('default' | 'cool' | 'warm' | 'neutral')[] = ['default', 'cool', 'warm', 'neutral'];
+    const currentIndex = themes.indexOf(backgroundTheme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    setBackgroundTheme(themes[nextIndex]);
+  };
+  
+  // Toggle background intensity
+  const cycleBackgroundIntensity = () => {
+    const intensities: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
+    const currentIndex = intensities.indexOf(backgroundIntensity);
+    const nextIndex = (currentIndex + 1) % intensities.length;
+    setBackgroundIntensity(intensities[nextIndex]);
   };
   
   // Pagination functions
@@ -229,13 +260,24 @@ export default function MindPalace() {
     }
   };
   
+  // Get main container classes based on transition state
+  const getMainContainerClasses = () => {
+    const baseClasses = "journal-page p-8 rounded-2xl relative z-10 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md";
+    
+    if (isTransitioning) {
+      return `${baseClasses} animate-pageOut`;
+    }
+    
+    return `${baseClasses} animate-pageIn`;
+  };
+  
   // Main renderer
   if (loading) {
     return (
       <>
         <Header />
-        <main className="container mx-auto px-4 py-8 max-w-5xl">
-          <div className="journal-page p-8 rounded-2xl">
+        <main className="container mx-auto px-4 py-8 max-w-5xl relative">
+          <div className="journal-page p-8 rounded-2xl relative z-10 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md">
             <h1 className="journal-title text-center">Mind Palace (Prototype)</h1>
             <div className="flex justify-center items-center h-64">
               <div className="w-8 h-8 border-4 border-accent rounded-full border-t-transparent animate-spin"></div>
@@ -249,8 +291,15 @@ export default function MindPalace() {
   return (
     <>
       <Header />
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
-        <div className={`journal-page p-8 rounded-2xl transition-all duration-700 ${isTransitioning ? 'scale-110 opacity-0' : ''}`}>
+      <main className="container mx-auto px-4 py-8 max-w-5xl relative">
+        {/* Animated Background */}
+        <AnimatedBackground 
+          style={backgroundStyle} 
+          theme={backgroundTheme}
+          intensity={backgroundIntensity}
+        />
+        
+        <div className={getMainContainerClasses()}>
           {/* Header - modular component */}
           <MindPalaceHeader 
             renderMode={renderMode}
@@ -258,7 +307,25 @@ export default function MindPalace() {
           />
           
           {/* Development render mode toggle - can be removed in production */}
-          <div className="mb-4 text-right">
+          <div className="mb-4 text-right flex justify-end items-center gap-4">
+            <button 
+              onClick={toggleBackgroundStyle} 
+              className="text-xs text-gray-500 hover:text-accent"
+            >
+              Background: {backgroundStyle}
+            </button>
+            <button 
+              onClick={cycleBackgroundTheme} 
+              className="text-xs text-gray-500 hover:text-accent"
+            >
+              Theme: {backgroundTheme}
+            </button>
+            <button 
+              onClick={cycleBackgroundIntensity} 
+              className="text-xs text-gray-500 hover:text-accent"
+            >
+              Intensity: {backgroundIntensity}
+            </button>
             <button 
               onClick={toggleRenderMode} 
               className="text-xs text-gray-500 hover:text-accent"
@@ -274,6 +341,11 @@ export default function MindPalace() {
             renderMode={renderMode}
             animationConfig={animationConfig}
           />
+          
+          {/* Keyboard Helper Component */}
+          <div className="relative mb-6">
+            <KeyboardHelper showInitially={false} />
+          </div>
           
           {/* Grid Layout for Rooms - modular component */}
           <RoomGrid 
