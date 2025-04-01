@@ -21,8 +21,9 @@ export async function searchGames(query: string): Promise<RawgGame[]> {
   if (!query || query.length < 2) return [];
   
   try {
+    // Use our internal proxy API instead of calling RAWG directly
     const response = await fetch(
-      `${API_BASE}/games?key=${RAWG_API_KEY}&search=${encodeURIComponent(query)}&page_size=10`
+      `/api/proxy/rawg?search=${encodeURIComponent(query)}&page_size=10`
     );
     
     if (!response.ok) throw new Error('Failed to search games');
@@ -40,8 +41,9 @@ export async function searchGames(query: string): Promise<RawgGame[]> {
  */
 export async function getGameDetails(gameId: number): Promise<RawgGame | null> {
   try {
+    // Use our internal proxy API instead of calling RAWG directly
     const response = await fetch(
-      `${API_BASE}/games/${gameId}?key=${RAWG_API_KEY}`
+      `/api/proxy/rawg/game?id=${gameId}`
     );
     
     if (!response.ok) throw new Error('Failed to get game details');

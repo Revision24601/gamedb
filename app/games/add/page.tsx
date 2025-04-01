@@ -20,11 +20,18 @@ const statusOptions = [
 export default function AddGame() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm<GameFormData>();
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<GameFormData>();
 
   const onSubmit = async (data: GameFormData) => {
     try {
       setSubmitting(true);
+      
+      // Set default values for rating and hoursPlayed when status is 'Plan to Play'
+      if (data.status === 'Plan to Play') {
+        data.rating = 0;
+        data.hoursPlayed = 0;
+      }
+      
       const response = await fetch('/api/games', {
         method: 'POST',
         headers: {
@@ -102,49 +109,54 @@ export default function AddGame() {
           </select>
         </div>
 
-        <div>
-          <label htmlFor="rating" className="block text-sm font-medium mb-1">
-            Rating
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              id="rating"
-              min="0"
-              max="10"
-              className="input-field w-24"
-              {...register('rating', {
-                valueAsNumber: true,
-                min: { value: 0, message: 'Rating must be between 0 and 10' },
-                max: { value: 10, message: 'Rating must be between 0 and 10' },
-              })}
-            />
-            <FaStar className="text-yellow-400" />
-            <span className="text-sm text-gray-400">/10</span>
-          </div>
-          {errors.rating && (
-            <p className="text-red-500 text-sm mt-1">{errors.rating.message}</p>
-          )}
-        </div>
+        {/* Only show rating and hours played if status is not 'Plan to Play' */}
+        {watch('status') !== 'Plan to Play' && (
+          <>
+            <div>
+              <label htmlFor="rating" className="block text-sm font-medium mb-1">
+                Rating
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  id="rating"
+                  min="0"
+                  max="10"
+                  className="input-field w-24"
+                  {...register('rating', {
+                    valueAsNumber: true,
+                    min: { value: 0, message: 'Rating must be between 0 and 10' },
+                    max: { value: 10, message: 'Rating must be between 0 and 10' },
+                  })}
+                />
+                <FaStar className="text-yellow-400" />
+                <span className="text-sm text-gray-400">/10</span>
+              </div>
+              {errors.rating && (
+                <p className="text-red-500 text-sm mt-1">{errors.rating.message}</p>
+              )}
+            </div>
 
-        <div>
-          <label htmlFor="hoursPlayed" className="block text-sm font-medium mb-1">
-            Hours Played
-          </label>
-          <input
-            type="number"
-            id="hoursPlayed"
-            min="0"
-            className="input-field w-32"
-            {...register('hoursPlayed', {
-              valueAsNumber: true,
-              min: { value: 0, message: 'Hours played cannot be negative' },
-            })}
-          />
-          {errors.hoursPlayed && (
-            <p className="text-red-500 text-sm mt-1">{errors.hoursPlayed.message}</p>
-          )}
-        </div>
+            <div>
+              <label htmlFor="hoursPlayed" className="block text-sm font-medium mb-1">
+                Hours Played
+              </label>
+              <input
+                type="number"
+                id="hoursPlayed"
+                min="0"
+                className="input-field w-32"
+                {...register('hoursPlayed', {
+                  valueAsNumber: true,
+                  min: { value: 0, message: 'Hours played cannot be negative' },
+                })}
+              />
+              {errors.hoursPlayed && (
+                <p className="text-red-500 text-sm mt-1">{errors.hoursPlayed.message}</p>
+              )}
+            </div>
+          </>
+        )}
 
         <div>
           <label htmlFor="imageUrl" className="block text-sm font-medium mb-1">
