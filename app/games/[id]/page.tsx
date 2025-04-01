@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import StarRating from '@/components/StarRating';
 import StatusSelector from '@/components/StatusSelector';
-import { FaEdit, FaTrash, FaArrowLeft, FaCalendarAlt, FaGamepad, FaTag, FaLaptop } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaArrowLeft, FaCalendarAlt, FaGamepad, FaTag, FaLaptop, FaClock } from 'react-icons/fa';
 import type { IGame } from '@/models/Game';
 
 type GameStatus = 'Playing' | 'Completed' | 'On Hold' | 'Dropped' | 'Plan to Play';
@@ -132,13 +132,143 @@ export default function GameDetailPage({ params }: { params: { id: string } }) {
   
   if (loading) {
     return (
-      <main>
+      <main className="journal-page">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading game details...</p>
-          </div>
+        
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Back button */}
+          <Link 
+            href="/" 
+            className="nav-link flex items-center gap-1 mb-8 group"
+          >
+            <FaArrowLeft className="text-sm transition-transform group-hover:-translate-x-1" />
+            <span>Back to Games</span>
+          </Link>
+
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="loading-spinner"></div>
+            </div>
+          ) : error ? (
+            <div className="card p-4">
+              <p className="error-message">{error}</p>
+            </div>
+          ) : game ? (
+            <div className="space-y-12">
+              {/* Game Title Section */}
+              <div className="relative">
+                <div className="absolute -top-4 -left-4 w-24 h-24 bg-accent/5 rounded-full blur-2xl"></div>
+                <h1 className="journal-title">
+                  {game.title}
+                </h1>
+                <div className="flex items-center gap-4 text-gray-600 dark:text-gray-300">
+                  <span className="flex items-center gap-2">
+                    <FaGamepad className="text-accent" />
+                    {game.platform}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <FaClock className="text-accent" />
+                    {game.hoursPlayed?.toFixed(1) || 0} hours
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Badge */}
+              <div className="inline-block">
+                <span className={`status-badge ${
+                  game.status === 'Playing' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' :
+                  game.status === 'Completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                  game.status === 'Plan to Play' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                  'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
+                }`}>
+                  {game.status}
+                </span>
+              </div>
+
+              {/* Game Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Left Column */}
+                <div className="space-y-8">
+                  {/* Rating Section */}
+                  {game.status !== 'Plan to Play' && (
+                    <div className="journal-card">
+                      <h2 className="journal-section">My Rating</h2>
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                          <svg
+                            key={star}
+                            className={`w-5 h-5 ${
+                              star <= (game.rating || 0)
+                                ? 'text-yellow-400'
+                                : 'text-gray-300 dark:text-gray-600'
+                            }`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        Rating: {game.rating}/10
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes Section */}
+                  {game.notes && (
+                    <div className="journal-card">
+                      <h2 className="journal-section">My Notes</h2>
+                      <div className="journal-text whitespace-pre-wrap">
+                        {game.notes}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-8">
+                  {/* Game Cover Image */}
+                  {game.imageUrl && (
+                    <div className="journal-card">
+                      <div className="game-image-container">
+                        <Image
+                          src={game.imageUrl}
+                          alt={game.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          className="object-cover"
+                          priority
+                          onError={(e) => {
+                            console.error('Error loading image:', e);
+                            // You could set a fallback image here if needed
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex gap-4">
+                    <Link
+                      href={`/games/${game._id}/edit`}
+                      className="btn-primary flex-1 flex items-center justify-center gap-2"
+                    >
+                      <FaEdit />
+                      Edit Entry
+                    </Link>
+                    <button
+                      onClick={handleDelete}
+                      className="btn-secondary flex-1 flex items-center justify-center gap-2"
+                    >
+                      <FaTrash />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
       </main>
     );
@@ -164,166 +294,143 @@ export default function GameDetailPage({ params }: { params: { id: string } }) {
   }
   
   return (
-    <main>
+    <main className="journal-page">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <Link href="/games" className="flex items-center text-primary-600 hover:text-primary-700">
-            <FaArrowLeft className="mr-2" />
-            Back to Games
-          </Link>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-          <div className="md:flex">
-            <div className="md:w-1/3 lg:w-1/4 bg-gray-100 dark:bg-gray-700">
-              <div className="relative h-64 md:h-full w-full">
-                {game.imageUrl ? (
-                  <Image
-                    src={game.imageUrl}
-                    alt={game.title}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <FaGamepad className="h-24 w-24 text-gray-400" />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Back button */}
+        <Link 
+          href="/" 
+          className="nav-link flex items-center gap-1 mb-8 group"
+        >
+          <FaArrowLeft className="text-sm transition-transform group-hover:-translate-x-1" />
+          <span>Back to Games</span>
+        </Link>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="loading-spinner"></div>
+          </div>
+        ) : error ? (
+          <div className="card p-4">
+            <p className="error-message">{error}</p>
+          </div>
+        ) : game ? (
+          <div className="space-y-12">
+            {/* Game Title Section */}
+            <div className="relative">
+              <div className="absolute -top-4 -left-4 w-24 h-24 bg-accent/5 rounded-full blur-2xl"></div>
+              <h1 className="journal-title">
+                {game.title}
+              </h1>
+              <div className="flex items-center gap-4 text-gray-600 dark:text-gray-300">
+                <span className="flex items-center gap-2">
+                  <FaGamepad className="text-accent" />
+                  {game.platform}
+                </span>
+                <span className="flex items-center gap-2">
+                  <FaClock className="text-accent" />
+                  {game.hoursPlayed?.toFixed(1) || 0} hours
+                </span>
+              </div>
+            </div>
+
+            {/* Status Badge */}
+            <div className="inline-block">
+              <span className={`status-badge ${
+                game.status === 'Playing' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' :
+                game.status === 'Completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                game.status === 'Plan to Play' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
+              }`}>
+                {game.status}
+              </span>
+            </div>
+
+            {/* Game Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Left Column */}
+              <div className="space-y-8">
+                {/* Rating Section */}
+                {game.status !== 'Plan to Play' && (
+                  <div className="journal-card">
+                    <h2 className="journal-section">My Rating</h2>
+                    <div className="flex items-center gap-2">
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                        <svg
+                          key={star}
+                          className={`w-5 h-5 ${
+                            star <= (game.rating || 0)
+                              ? 'text-yellow-400'
+                              : 'text-gray-300 dark:text-gray-600'
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                      Rating: {game.rating}/10
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes Section */}
+                {game.notes && (
+                  <div className="journal-card">
+                    <h2 className="journal-section">My Notes</h2>
+                    <div className="journal-text whitespace-pre-wrap">
+                      {game.notes}
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
-            
-            <div className="p-6 md:w-2/3 lg:w-3/4">
-              <div className="flex justify-between items-start">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{game.title}</h1>
-                
-                <div className="flex space-x-2">
-                  <Link 
-                    href={`/games/${params.id}/edit`}
-                    className="btn-primary flex items-center"
+
+              {/* Right Column */}
+              <div className="space-y-8">
+                {/* Game Cover Image */}
+                {game.imageUrl && (
+                  <div className="journal-card">
+                    <div className="game-image-container">
+                      <Image
+                        src={game.imageUrl}
+                        alt={game.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover"
+                        priority
+                        onError={(e) => {
+                          console.error('Error loading image:', e);
+                          // You could set a fallback image here if needed
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-4">
+                  <Link
+                    href={`/games/${game._id}/edit`}
+                    className="btn-primary flex-1 flex items-center justify-center gap-2"
                   >
-                    <FaEdit className="mr-2" />
-                    Edit
+                    <FaEdit />
+                    Edit Entry
                   </Link>
-                  
                   <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="btn-primary bg-red-600 hover:bg-red-700 text-white flex items-center"
+                    onClick={handleDelete}
+                    className="btn-secondary flex-1 flex items-center justify-center gap-2"
                   >
-                    <FaTrash className="mr-2" />
+                    <FaTrash />
                     Delete
                   </button>
                 </div>
               </div>
-              
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Details</h2>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-start">
-                      <FaLaptop className="mt-1 mr-2 text-gray-500" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Platform</p>
-                        <p className="text-gray-900 dark:text-white">{game.platform}</p>
-                      </div>
-                    </div>
-                    
-                    {game.hoursPlayed > 0 && (
-                      <div className="flex items-start">
-                        <FaCalendarAlt className="mt-1 mr-2 text-gray-500" />
-                        <div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Hours Played</p>
-                          <p className="text-gray-900 dark:text-white">{game.hoursPlayed}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-start">
-                      <FaCalendarAlt className="mt-1 mr-2 text-gray-500" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Added On</p>
-                        <p className="text-gray-900 dark:text-white">{formatDate(game.createdAt)}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <FaCalendarAlt className="mt-1 mr-2 text-gray-500" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Last Updated</p>
-                        <p className="text-gray-900 dark:text-white">{formatDate(game.updatedAt)}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Your Rating</h2>
-                  
-                  <div className="mb-6">
-                    <StarRating 
-                      rating={game.rating} 
-                      onChange={handleRatingChange}
-                      size="lg"
-                    />
-                  </div>
-                  
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Status</h2>
-                  
-                  <div className="mb-6">
-                    <StatusSelector 
-                      status={game.status} 
-                      onChange={handleStatusChange}
-                    />
-                    {isUpdating && (
-                      <p className="text-sm text-gray-500 mt-2">Updating...</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {game.notes && (
-                <div className="mt-8">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Notes</h2>
-                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
-                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{game.notes}</p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
-        </div>
-        
-        {/* Delete confirmation modal */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                Delete Game
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-6">
-                Are you sure you want to delete "{game.title}"? This action cannot be undone.
-              </p>
-              <div className="flex space-x-4">
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="btn-primary bg-red-600 hover:bg-red-700 text-white flex-1"
-                >
-                  {isDeleting ? 'Deleting...' : 'Yes, Delete'}
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="btn-primary bg-gray-500 flex-1"
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        ) : null}
       </div>
     </main>
   );
