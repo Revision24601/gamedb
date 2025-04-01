@@ -92,20 +92,13 @@ export default function Dashboard() {
           mostPlayedPlatform
         });
         
-        // Fetch playing games for the chart
-        const playingGamesResponse = await fetch('/api/games?status=Playing');
-        if (!playingGamesResponse.ok) throw new Error('Failed to fetch playing games');
-        const playingGamesData = await playingGamesResponse.json();
+        // Set all games for the chart
+        setGames(allGamesData.games || []);
         
-        // Sort by hours played (descending) and take top 15
-        let sortedGames = [...(playingGamesData.games || [])].sort((a, b) => 
-          (b.hoursPlayed || 0) - (a.hoursPlayed || 0)
-        ).slice(0, 15);
-        
-        setGames(sortedGames);
-        
-        // Calculate total hours
-        const total = sortedGames.reduce((sum, game) => sum + (game.hoursPlayed || 0), 0);
+        // Calculate total hours for currently playing games
+        const total = allGamesData.games
+          .filter((game: IGame) => game.status === 'Playing')
+          .reduce((sum: number, game: IGame) => sum + (game.hoursPlayed || 0), 0);
         setTotalHours(total);
         
         setLoading(false);
@@ -125,21 +118,43 @@ export default function Dashboard() {
     return title.length > maxLength ? `${title.substring(0, maxLength)}...` : title;
   }, [windowWidth]);
 
-  // Transform data for the chart - moved inside the component to use truncateTitle
-  const chartData = games.map(game => ({
-    name: truncateTitle(game.title),
-    hours: game.hoursPlayed || 0,
-    fullTitle: game.title, // Keep the full title for tooltips
-    _id: game._id, // Include the game ID for navigation
-  }));
+  // Filter and sort games by hours played
+  const playingGames = games
+    .filter(game => game.status === 'Playing' && game.hoursPlayed > 0)
+    .sort((a, b) => (b.hoursPlayed || 0) - (a.hoursPlayed || 0))
+    .slice(0, 15);
 
-  const CustomTooltip = ({ active, payload }) => {
+  const completedGames = games
+    .filter(game => game.status === 'Completed' && game.hoursPlayed > 0)
+    .sort((a, b) => (b.hoursPlayed || 0) - (a.hoursPlayed || 0))
+    .slice(0, 15);
+
+  // Replace the above code with this new version:
+  // Combine all games and sort by hours played
+  const chartData = games
+    .filter(game => game.hoursPlayed > 0)
+    .map(game => ({
+      name: truncateTitle(game.title),
+      hours: game.hoursPlayed || 0,
+      status: game.status,
+      fill: game.status === 'Playing' ? '#4F46E5' : '#10B981' // Indigo for playing, green for completed
+    }))
+    .sort((a, b) => b.hours - a.hours)
+    .slice(0, 15);
+
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      const game = payload[0].payload;
+      const data = payload[0].payload;
       return (
-        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
-          <p className="font-medium text-gray-900 dark:text-white">{game.fullTitle}</p>
-          <p className="text-accent">{`${payload[0].value} hours`}</p>
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+          <p className="font-medium text-gray-900 dark:text-white">{label}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            {data.hours} {data.hours === 1 ? 'hour' : 'hours'} played
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Status: {data.status}
+          </p>
         </div>
       );
     }
@@ -200,6 +215,22 @@ export default function Dashboard() {
         ) : error ? (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-xl">
             <p className="text-red-800 dark:text-red-400">{error}</p>
+          </div>
+        ) : chartData.length === 0 ? (
+          <div className="text-center py-12 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <FaGamepad className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+            <h3 className="text-xl font-medium text-gray-800 dark:text-white">No games in progress</h3>
+            <p className="mt-2 text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+              Start playing some games to see your progress here!
+            </p>
+            <div className="mt-6">
+              <Link 
+                href="/games/new" 
+                className="btn-primary inline-flex items-center shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+              >
+                Add a Game
+              </Link>
+            </div>
           </div>
         ) : (
           <>
@@ -307,76 +338,48 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Games Bar Chart */}
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-10">
-              <h2 className="text-xl font-semibold mb-6 text-gray-800 dark:text-white flex items-center">
-                <FaChartBar className="text-accent mr-2" />
-                Hours Played Distribution
+            {/* Hours Distribution Chart */}
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+              <h2 className="text-xl font-semibold mb-6 text-gray-800 dark:text-white flex items-center gap-2">
+                <FaChartBar className="text-accent" />
+                Hours Distribution
               </h2>
               
-              <div className="h-80 md:h-96">
+              <div className="h-[400px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={chartData}
-                    margin={{ 
-                      top: 10, 
-                      right: windowWidth < 640 ? 5 : 10, 
-                      left: windowWidth < 640 ? 5 : 10, 
-                      bottom: windowWidth < 640 ? 80 : 50 
-                    }}
-                    layout={windowWidth < 640 ? "vertical" : "horizontal"}
-                    onClick={handleBarClick}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    {windowWidth < 640 ? (
-                      // Mobile view - Horizontal bars (vertical layout)
-                      <>
-                        <XAxis type="number" />
-                        <YAxis 
-                          dataKey="name" 
-                          type="category" 
-                          width={100}
-                          tick={{ fontSize: 12 }}
-                        />
-                      </>
-                    ) : (
-                      // Desktop view - Vertical bars (horizontal layout)
-                      <>
-                        <XAxis 
-                          dataKey="name" 
-                          angle={-45} 
-                          textAnchor="end" 
-                          tick={{ fontSize: 12 }}
-                          interval={0}
-                          height={70}
-                        />
-                        <YAxis 
-                          label={{ 
-                            value: 'Hours Played', 
-                            angle: -90, 
-                            position: 'insideLeft',
-                            style: { textAnchor: 'middle' }
-                          }} 
-                          allowDecimals={false}
-                        />
-                      </>
-                    )}
-                    <Tooltip 
-                      content={<CustomTooltip />} 
-                      cursor={<CustomCursor />}
+                  <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+                    <XAxis 
+                      dataKey="name" 
+                      angle={-45}
+                      textAnchor="end"
+                      height={100}
+                      interval={0}
+                      tick={{ fill: '#6B7280', fontSize: 12 }}
                     />
-                    <Legend wrapperStyle={{ paddingTop: 10 }} />
+                    <YAxis 
+                      tick={{ fill: '#6B7280', fontSize: 12 }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
                     <Bar 
                       dataKey="hours" 
-                      name="Hours Played" 
-                      fill="#6366f1" 
-                      radius={[6, 6, 0, 0]}
-                      className="hover:opacity-80 transition-opacity"
-                      animationDuration={1000}
+                      name="Hours Played"
+                      fill="#4F46E5"
                     />
                   </BarChart>
                 </ResponsiveContainer>
+              </div>
+
+              {/* Legend */}
+              <div className="flex justify-center gap-6 mt-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-indigo-600 rounded"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Currently Playing</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-emerald-500 rounded"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Completed</span>
+                </div>
               </div>
             </div>
 

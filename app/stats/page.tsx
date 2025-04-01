@@ -158,6 +158,21 @@ export default function StatsPage() {
         highestRatedGame,
         longestPlayedGame,
       });
+
+      // Calculate hours distribution
+      const hoursDistribution = games
+        .filter(game => game.hoursPlayed > 0)
+        .map(game => ({
+          name: game.title,
+          hours: Number(game.hoursPlayed) // Ensure hoursPlayed is converted to a number
+        }))
+        .sort((a, b) => b.hours - a.hours) // Sort by hours in descending order
+        .slice(0, 10); // Get top 10 games by hours played
+
+      // Calculate total hours played
+      const totalHoursPlayed = games.reduce((total, game) => {
+        return total + (Number(game.hoursPlayed) || 0); // Ensure hoursPlayed is converted to a number
+      }, 0);
     }
   }, [games]);
 
