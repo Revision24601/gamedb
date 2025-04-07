@@ -36,6 +36,9 @@ module.exports = {
         },
         accent: "#4a9eff"
       },
+      fontFamily: {
+        handwriting: ['Caveat', 'Comic Sans MS', 'cursive'],
+      },
     },
   },
   plugins: [],

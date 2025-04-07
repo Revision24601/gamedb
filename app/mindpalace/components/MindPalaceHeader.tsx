@@ -1,33 +1,25 @@
 import React from 'react';
-import { BaseMindPalaceProps } from '../types';
 
-interface MindPalaceHeaderProps extends BaseMindPalaceProps {
+interface MindPalaceHeaderProps {
   title?: string;
+  subtitle?: string;
 }
 
 const MindPalaceHeader: React.FC<MindPalaceHeaderProps> = ({ 
-  title = "Mind Palace (Prototype)",
-  animationConfig,
-  renderMode = 'static'
+  title = "Mind Palace",
+  subtitle = "Organize your gaming memories spatially"
 }) => {
-  // CSS classes based on render mode
-  const getHeaderClasses = () => {
-    switch (renderMode) {
-      case 'static':
-        return 'journal-title text-center';
-      case '2d-animated':
-        return 'journal-title text-center animate-fadeIn';
-      case 'webgl':
-        return 'journal-title text-center webgl-text';
-      default:
-        return 'journal-title text-center';
-    }
-  };
-
   return (
-    <h1 className={getHeaderClasses()}>
-      {title}
-    </h1>
+    <div className="mb-6">
+      <h1 className="journal-title text-center">
+        {title}
+      </h1>
+      {subtitle && (
+        <p className="text-center text-gray-600 dark:text-gray-400 mt-2 italic">
+          {subtitle}
+        </p>
+      )}
+    </div>
   );
 };
 

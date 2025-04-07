@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaKeyboard, FaArrowUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaEnter } from 'react-icons/fa';
+import { FaKeyboard, FaArrowUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaLevelDownAlt } from 'react-icons/fa';
 
 interface KeyboardHelperProps {
   showInitially?: boolean;
@@ -47,7 +47,7 @@ const KeyboardHelper: React.FC<KeyboardHelperProps> = ({ showInitially = false }
             
             <div className="flex items-center text-xs text-gray-600 dark:text-gray-300">
               <span className="flex items-center justify-center w-14 h-6 bg-gray-200 dark:bg-gray-700 rounded mr-2">
-                <FaEnter className="text-xs mr-1" />
+                <FaLevelDownAlt className="text-xs transform rotate-90 mr-1" />
                 <span>Enter</span>
               </span>
               <span>Select room</span>
@@ -64,7 +64,7 @@ const KeyboardHelper: React.FC<KeyboardHelperProps> = ({ showInitially = false }
               <span className="flex items-center justify-center w-8 h-6 bg-gray-200 dark:bg-gray-700 rounded mr-2">
                 <span>Esc</span>
               </span>
-              <span>Close detail modal</span>
+              <span>Close tooltip</span>
             </div>
           </div>
         </div>

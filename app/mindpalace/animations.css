@@ -25,6 +25,136 @@
   background-size: 20px 20px;
 }
 
+/* Viewport animations */
+@keyframes viewportIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-viewport-in {
+  animation: viewportIn 0.5s ease-out forwards;
+}
+
+@keyframes roomReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-room-reveal {
+  animation: roomReveal 0.4s ease-out forwards;
+}
+
+/* Viewport grid pattern */
+.viewport-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+/* Viewport compass rose animation */
+@keyframes compassPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+.animate-compass {
+  animation: compassPulse 2s ease-in-out infinite;
+}
+
+/* Floating animation for room cards */
+@keyframes roomFloat {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-5px) rotate(0.5deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-3px) rotate(-0.5deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+.floating-animation {
+  animation: roomFloat 5s ease-in-out infinite;
+}
+
+/* Particle floating animation */
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.2;
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-40px) translateX(-5px);
+    opacity: 0.2;
+  }
+  75% {
+    transform: translateY(-60px) translateX(10px);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-80px) translateX(0);
+    opacity: 0;
+  }
+}
+
+.animate-float-particle {
+  animation: particleFloat 10s ease-in-out infinite;
+}
+
+/* Viewport minimap blip animation */
+@keyframes minimapBlip {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+}
+
+.animate-minimap-blip {
+  animation: minimapBlip 1.5s ease-in-out infinite;
+}
+
 /* Parallax layers animation */
 @keyframes floatBackground {
   0% {
@@ -391,4 +521,142 @@ body.page-transitioning {
 .animate-roomCardExit {
   animation: roomCardExit 0.4s ease-in forwards;
   pointer-events: none;
+}
+
+/* Viewport animations */
+@keyframes viewportFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-viewportFadeIn {
+  animation: viewportFadeIn 0.6s ease-out forwards;
+}
+
+/* Floating animation for room cards in the viewport */
+@keyframes floatingCard {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-floatingCard {
+  animation: floatingCard 3s ease-in-out infinite;
+}
+
+/* Pulse animation for viewport controls */
+@keyframes viewportControlPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+.animate-viewportControlPulse {
+  animation: viewportControlPulse 2s ease-in-out infinite;
+}
+
+/* Cluster hover effect */
+@keyframes clusterHover {
+  0% {
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0.1);
+  }
+}
+
+.animate-cluster-hover {
+  animation: clusterHover 3s ease-in-out infinite;
+}
+
+/* Cluster title entrance animation */
+@keyframes clusterTitleEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-cluster-title {
+  animation: clusterTitleEntrance 0.5s ease-out forwards;
+}
+
+/* Fancy compass animation for cluster navigation */
+@keyframes compassGlow {
+  0% {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8));
+  }
+  100% {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
+  }
+}
+
+.animate-compass-glow {
+  animation: compassGlow 2s ease-in-out infinite;
+}
+
+/* Room focus animations */
+@keyframes roomFocusIn {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+  }
+  100% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+  }
+}
+
+.animate-room-focus-in {
+  animation: roomFocusIn 0.4s ease-out forwards;
+}
+
+/* Background dimming animation when focusing on room */
+@keyframes backgroundDim {
+  0% {
+    backdrop-filter: blur(0);
+    background-color: rgba(0, 0, 0, 0);
+  }
+  100% {
+    backdrop-filter: blur(2px);
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+}
+
+.animate-background-dim {
+  animation: backgroundDim 0.4s ease-out forwards;
+}
+
+/* Smooth panning transition classes */
+.smooth-pan {
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 } 

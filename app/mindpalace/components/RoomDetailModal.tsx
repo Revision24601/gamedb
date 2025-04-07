@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FaGamepad, FaStar, FaArrowRight } from 'react-icons/fa';
 import { Room, BaseMindPalaceProps, getRoomBackground } from '../types';
 import { IGame } from '@/models/Game';
@@ -6,10 +6,10 @@ import { iconComponents } from '../utils/iconMapping';
 
 interface RoomDetailModalProps extends BaseMindPalaceProps {
   room: Room;
-  game: IGame | null;
-  isTransitioning: boolean;
+  game?: IGame | undefined;
+  isOpen: boolean;
   onClose: () => void;
-  onEnterRoom: (e: React.MouseEvent) => void;
+  onEnterRoom: (gameId: string) => void;
 }
 
 // Helper for rendering star ratings
@@ -51,12 +51,14 @@ const getStatusColor = (status: string): string => {
 const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
   room,
   game,
-  isTransitioning,
+  isOpen,
   onClose,
   onEnterRoom,
   animationConfig,
   renderMode = 'static'
 }) => {
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  
   // Refs for focus management
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -71,13 +73,13 @@ const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
     };
     
     // Focus the modal when it opens
-    if (closeButtonRef.current) {
+    if (isOpen && closeButtonRef.current) {
       closeButtonRef.current.focus();
     }
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [isOpen, onClose]);
   
   // Handle focus trapping
   useEffect(() => {
@@ -109,6 +111,17 @@ const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
     window.addEventListener('keydown', handleTabKey);
     return () => window.removeEventListener('keydown', handleTabKey);
   }, []);
+
+  // Handle enter room click with transition animation
+  const handleEnterRoom = () => {
+    if (game?._id) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        onEnterRoom(game._id as string);
+        setIsTransitioning(false);
+      }, 500);
+    }
+  };
 
   // Get the icon component for the room type
   const RoomIcon = iconComponents[room.type] || iconComponents.default;
@@ -187,6 +200,8 @@ const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
         return `${baseClasses} ${transitionClasses}`;
     }
   };
+  
+  if (!isOpen) return null;
   
   return (
     <div 
@@ -330,7 +345,7 @@ const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
           {game ? (
             <button 
               className="mt-4 px-4 py-2 bg-accent text-white rounded-lg flex items-center justify-center hover:bg-accent/90 transition-colors"
-              onClick={onEnterRoom}
+              onClick={handleEnterRoom}
               ref={enterRoomButtonRef}
             >
               Enter Room <FaArrowRight className="ml-2" />
