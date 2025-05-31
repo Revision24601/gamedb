@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Room } from '../types';
 import { IGame } from '@/models/Game';
 import RoomCard from './RoomCard';
+import DreamyBackground from './DreamyBackground';
+import EntranceEffect from './EntranceEffect';
 
 interface MindPalaceViewportProps {
   rooms: Room[];
@@ -114,26 +116,49 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
   
   // Smooth animation function for panning and zooming
   const animateViewport = () => {
-    if (translateX !== targetTranslateX || translateY !== targetTranslateY || scale !== targetScale) {
-      // Calculate step for smooth animation
-      const translateXStep = (targetTranslateX - translateX) * 0.08;
-      const translateYStep = (targetTranslateY - translateY) * 0.08;
-      const scaleStep = (targetScale - scale) * 0.08;
+    const easeThreshold = 0.5; // Minimum distance to stop animation (prevents tiny movements)
+    
+    if (Math.abs(targetTranslateX - translateX) > easeThreshold || 
+        Math.abs(targetTranslateY - translateY) > easeThreshold || 
+        Math.abs(targetScale - scale) > 0.01) {
+      
+      // Calculate step for smooth animation with damping
+      const translateXStep = (targetTranslateX - translateX) * 0.1; // Increased from 0.08 to 0.1
+      const translateYStep = (targetTranslateY - translateY) * 0.1;
+      const scaleStep = (targetScale - scale) * 0.1;
       
       // Apply the step
-      setTranslateX(prev => Math.abs(targetTranslateX - prev) < 0.5 ? targetTranslateX : prev + translateXStep);
-      setTranslateY(prev => Math.abs(targetTranslateY - prev) < 0.5 ? targetTranslateY : prev + translateYStep);
-      setScale(prev => Math.abs(targetScale - prev) < 0.01 ? targetScale : prev + scaleStep);
+      setTranslateX(prev => {
+        // If very close to target, snap to it
+        if (Math.abs(targetTranslateX - prev) < easeThreshold) return targetTranslateX;
+        return prev + translateXStep;
+      });
+      
+      setTranslateY(prev => {
+        if (Math.abs(targetTranslateY - prev) < easeThreshold) return targetTranslateY;
+        return prev + translateYStep;
+      });
+      
+      setScale(prev => {
+        if (Math.abs(targetScale - prev) < 0.01) return targetScale;
+        return prev + scaleStep;
+      });
       
       // Request next animation frame
       animationRef.current = requestAnimationFrame(animateViewport);
-    } else if (isZoomingToRoom && focusedRoom) {
-      // If we've reached the target position and scale for the room focus,
-      // wait a moment then trigger the handleRoomClick event
-      setTimeout(() => {
-        handleRoomClick(focusedRoom);
-        setIsZoomingToRoom(false);
-      }, 300);
+    } else {
+      // We've reached the target, ensure exact values
+      setTranslateX(targetTranslateX);
+      setTranslateY(targetTranslateY);
+      setScale(targetScale);
+      
+      // Handle room focus completion
+      if (isZoomingToRoom && focusedRoom) {
+        setTimeout(() => {
+          handleRoomClick(focusedRoom);
+          setIsZoomingToRoom(false);
+        }, 300);
+      }
     }
   };
   
@@ -325,9 +350,19 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
     };
   }, [focusedRoom, isZoomingToRoom]);
   
-  // Center viewport initially
+  // State for entrance animation
+  const [showEntranceEffect, setShowEntranceEffect] = useState(true);
+  const [entranceComplete, setEntranceComplete] = useState(false);
+  
+  // Center viewport initially and handle entrance animation
   useEffect(() => {
     if (viewportRef.current && canvasRef.current) {
+      // Set initial scale for entrance animation
+      if (!entranceComplete) {
+        setScale(0.3); // Start with a smaller scale
+        setTargetScale(1); // Target the normal scale
+      }
+      
       // Initial centering - center on "Currently Playing" if it exists,
       // otherwise center on the first available cluster
       if (roomsByCluster['Currently Playing']) {
@@ -336,7 +371,13 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
         centerOnCluster(0);
       }
     }
-  }, [rooms]);
+  }, [rooms, entranceComplete]);
+
+  // Handle entrance animation completion
+  const handleEntranceComplete = () => {
+    setEntranceComplete(true);
+    setShowEntranceEffect(false);
+  };
   
   // Track mouse enter/leave on viewport
   const handleMouseEnter = () => {
@@ -392,27 +433,215 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
     setTargetScale(1);
   };
   
+  // Handle keyboard events for navigation
+  useEffect(() => {
+    // Track which keys are currently pressed
+    const keysPressed = new Set<string>();
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle keyboard navigation when viewport is active and not in focus mode
+      if (!isMouseOverViewport && !focusedRoom) return;
+      
+      // Skip if in focus mode or during room zoom animation
+      if (isZoomingToRoom || focusedRoom) {
+        // Only handle Escape key in focus mode
+        if (e.key === 'Escape') {
+          exitFocusMode();
+        }
+        return;
+      }
+      
+      // Skip if inputs are focused (like text inputs)
+      if (document.activeElement instanceof HTMLInputElement || 
+          document.activeElement instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Add key to pressed keys set
+      keysPressed.add(e.key);
+      
+      // Navigation speed - adjust based on current zoom level
+      const moveSpeed = 100 / scale;
+      
+      // Handle immediate actions that don't need continuous movement
+      switch (e.key) {
+        case '+':
+        case '=':
+          e.preventDefault();
+          handleZoomIn();
+          break;
+        case '-':
+        case '_':
+          e.preventDefault();
+          handleZoomOut();
+          break;
+        case 'Home':
+          e.preventDefault();
+          handleReset();
+          break;
+        case 'ArrowUp':
+        case 'ArrowDown':
+        case 'ArrowLeft':
+        case 'ArrowRight':
+          e.preventDefault(); // Prevent page scrolling
+          break;
+      }
+    };
+    
+    // Handle key release to stop movement
+    const handleKeyUp = (e: KeyboardEvent) => {
+      // Remove key from pressed keys set
+      keysPressed.delete(e.key);
+      
+      // If it was an arrow key, update target immediately to match current position
+      // This ensures immediate stopping when keys are released
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        // If no other arrow keys are pressed, immediately stop movement
+        const hasOtherArrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].some(key => 
+          key !== e.key && keysPressed.has(key)
+        );
+        
+        if (!hasOtherArrowKeys) {
+          setTargetTranslateX(translateX);
+          setTargetTranslateY(translateY);
+        }
+      }
+    };
+    
+    // Create a function that processes the current state of pressed keys
+    // to move the viewport at a consistent rate
+    const processKeys = () => {
+      if (!isMouseOverViewport && !focusedRoom) return;
+      if (isZoomingToRoom || focusedRoom) return;
+      
+      // Check if any arrow keys are pressed
+      const isArrowKeyPressed = keysPressed.has('ArrowUp') || 
+                               keysPressed.has('ArrowDown') || 
+                               keysPressed.has('ArrowLeft') || 
+                               keysPressed.has('ArrowRight');
+      
+      // If no arrow keys are pressed, make sure the target position matches the current position
+      // This ensures the viewport stops moving when keys are released
+      if (!isArrowKeyPressed) {
+        setTargetTranslateX(translateX);
+        setTargetTranslateY(translateY);
+        return;
+      }
+      
+      // Only apply movement if relevant keys are pressed
+      const moveSpeed = 15 / scale; // Reduced speed for smoother movement
+      
+      if (keysPressed.has('ArrowUp')) {
+        setTargetTranslateY(prev => prev + moveSpeed);
+      }
+      if (keysPressed.has('ArrowDown')) {
+        setTargetTranslateY(prev => prev - moveSpeed);
+      }
+      if (keysPressed.has('ArrowLeft')) {
+        setTargetTranslateX(prev => prev + moveSpeed);
+      }
+      if (keysPressed.has('ArrowRight')) {
+        setTargetTranslateX(prev => prev - moveSpeed);
+      }
+    };
+    
+    // Set up an animation frame loop to process keys at a consistent rate
+    let animationFrameId: number;
+    
+    const keyAnimationLoop = () => {
+      processKeys();
+      animationFrameId = requestAnimationFrame(keyAnimationLoop);
+    };
+    
+    // Start the animation loop
+    keyAnimationLoop();
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    // Clean up listeners and animation frame when component unmounts
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      cancelAnimationFrame(animationFrameId);
+      keysPressed.clear();
+    };
+  }, [isMouseOverViewport, focusedRoom, isZoomingToRoom, scale]);
+  
+  // State for background theme
+  const [bgTheme, setBgTheme] = useState<'default' | 'warm' | 'cool'>('default');
+  const [bgDensity, setBgDensity] = useState<'low' | 'medium' | 'high'>('medium');
+  
+  // Cycle through background themes
+  const cycleBgTheme = () => {
+    setBgTheme(theme => {
+      if (theme === 'default') return 'warm';
+      if (theme === 'warm') return 'cool';
+      return 'default';
+    });
+  };
+  
+  // Cycle through background densities
+  const cycleBgDensity = () => {
+    setBgDensity(density => {
+      if (density === 'low') return 'medium';
+      if (density === 'medium') return 'high';
+      return 'low';
+    });
+  };
+  
   return (
     <div
       ref={viewportRef}
-      className={`relative w-full h-[70vh] overflow-hidden border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 animate-viewportFadeIn viewport-grid ${focusedRoom ? 'focused-mode' : ''} ${isMouseOverViewport ? 'ring-2 ring-accent/30 ring-opacity-75' : ''}`}
+      className={`relative w-full h-[70vh] overflow-hidden border border-gray-200 dark:border-gray-700 rounded-xl 
+        rpg-map-bg rpg-map-grid
+        ${focusedRoom ? 'focused-mode' : ''} 
+        ${isMouseOverViewport ? 'ring-2 ring-accent/30 ring-opacity-75' : ''}
+        ${!entranceComplete ? 'animate-entrance-zoom' : 'animate-viewportFadeIn'}`}
       onMouseDown={handleMouseDown}
       onTouchStart={handleMouseDown}
       onWheel={handleWheel}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      tabIndex={0}
     >
+      {/* Entrance effect overlay - only show on first load */}
+      {showEntranceEffect && (
+        <EntranceEffect onComplete={handleEntranceComplete} />
+      )}
+      
+      {/* Dreamy animated background layer */}
+      <DreamyBackground theme={bgTheme} density={bgDensity} />
+      
       {/* Small indicator when viewport is active */}
       {isMouseOverViewport && !focusedRoom && (
-        <div className="absolute top-2 right-2 bg-accent/80 text-white text-xs px-2 py-1 rounded-full shadow-md animate-fadeIn">
+        <div className="absolute top-2 right-2 bg-amber-700/80 text-amber-50 text-xs px-2 py-1 rounded-full shadow-md animate-fadeIn rpg-button">
           Viewport active
+        </div>
+      )}
+      
+      {/* Background controls */}
+      {isMouseOverViewport && !focusedRoom && (
+        <div className="absolute top-2 left-2 flex space-x-2 z-20">
+          <button 
+            onClick={cycleBgTheme}
+            className="px-2 py-1 bg-amber-50/80 dark:bg-amber-800/80 text-amber-800 dark:text-amber-100 text-xs rounded-full shadow-md rpg-button"
+          >
+            Theme: {bgTheme}
+          </button>
+          <button 
+            onClick={cycleBgDensity}
+            className="px-2 py-1 bg-amber-50/80 dark:bg-amber-800/80 text-amber-800 dark:text-amber-100 text-xs rounded-full shadow-md rpg-button"
+          >
+            Density: {bgDensity}
+          </button>
         </div>
       )}
       
       {/* Overlay background when focused on a room */}
       {focusedRoom && (
         <div 
-          className="absolute inset-0 z-10 bg-black/40 backdrop-blur-sm animate-fadeIn"
+          className="absolute inset-0 z-10 bg-amber-900/30 backdrop-blur-sm animate-fadeIn"
           onClick={exitFocusMode}  
         />
       )}
@@ -446,7 +675,8 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
             >
               {/* Cluster background */}
               <div 
-                className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${clusterColorClasses} border-2 opacity-80 -z-10 shadow-xl animate-cluster-hover ${focusedRoom ? 'opacity-30' : ''}`}
+                className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${clusterColorClasses} rpg-cluster
+                  ${focusedRoom ? 'opacity-30' : ''}`}
                 style={{ 
                   transform: 'scale(0.95)',
                   width: '100%',
@@ -456,10 +686,12 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
               
               {/* Cluster title */}
               <div className="absolute top-8 left-0 right-0 text-center animate-cluster-title">
-                <h3 className="text-2xl font-bold text-gray-800 dark:text-white drop-shadow-md px-4 py-2 rounded-lg inline-block bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-white/20 dark:border-gray-700/20">
+                <h3 className="text-2xl font-bold text-amber-900 dark:text-amber-100 drop-shadow-md px-4 py-2 rounded-lg 
+                  inline-block bg-amber-50/90 dark:bg-amber-900/80 backdrop-blur-sm border border-amber-900/20 
+                  dark:border-amber-100/20 rpg-cluster-title">
                   {clusterName}
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                <p className="text-sm text-amber-800 dark:text-amber-200 mt-2">
                   {clusterRooms.length} {clusterRooms.length === 1 ? 'room' : 'rooms'}
                 </p>
               </div>
@@ -474,20 +706,26 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
                 const game = getGameForRoom(room);
                 const isFocused = focusedRoom?.id === room.id;
                 
+                // Calculate entrance delay for staggered appearance
+                const entranceDelay = !entranceComplete ? 
+                  Math.min(1.5, 1.0 + (roomIndex * 0.05) + (clusterIndex * 0.1)) : 0;
+                
                 return (
                   <div
                     key={room.id}
                     className={`absolute transition-transform duration-300 hover:z-10 
                       ${roomIndex % 3 === 0 ? 'animate-floatingCard' : ''} 
-                      ${isFocused ? 'z-20 scale-110' : focusedRoom ? 'opacity-40' : ''} 
-                      room-card`}
+                      ${isFocused ? 'z-20 scale-110 rpg-room-focused' : focusedRoom ? 'opacity-40' : ''} 
+                      room-card rpg-room`}
                     style={{
                       left: `${position.x - clusterPosition.x}px`,
                       top: `${position.y - clusterPosition.y}px`,
                       width: '250px',
                       height: '250px',
                       animationDelay: `${roomIndex * 0.2}s`,
-                      transform: 'translate(-50%, -50%)'
+                      transform: 'translate(-50%, -50%)',
+                      opacity: !entranceComplete ? 0 : 1,
+                      transition: `transform 0.3s, opacity 0.5s ${entranceDelay}s`
                     }}
                     onClick={() => onRoomCardClick(room, position)}
                   >
@@ -503,7 +741,8 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
                     {/* Confirmation tooltip when focused */}
                     {isFocused && (
                       <div className="absolute -bottom-14 left-0 right-0 text-center">
-                        <div className="inline-block bg-white/90 dark:bg-gray-800/90 text-accent px-4 py-2 rounded-full shadow-lg text-sm animate-fadeIn">
+                        <div className="inline-block bg-amber-50/90 dark:bg-amber-900/90 text-amber-800 dark:text-amber-100 
+                          px-4 py-2 rounded-full shadow-lg text-sm animate-fadeIn rpg-button">
                           Click again to enter
                         </div>
                       </div>
@@ -519,24 +758,30 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
       {/* Navigation controls - only show when not in focus mode */}
       {!focusedRoom && (
         <>
-          <div className="absolute bottom-4 right-4 flex gap-2">
+          <div className="absolute bottom-4 right-4 flex gap-2 rpg-controls p-2 rounded-full">
             <button
               onClick={handleZoomIn}
-              className="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow-md hover:bg-accent hover:text-white transition-colors control-button"
+              className="w-10 h-10 bg-amber-50 dark:bg-amber-800 rounded-full flex items-center justify-center 
+                shadow-md hover:bg-amber-100 dark:hover:bg-amber-700 hover:text-amber-800 dark:hover:text-amber-100 
+                transition-colors control-button rpg-button"
               aria-label="Zoom in"
             >
               +
             </button>
             <button
               onClick={handleZoomOut}
-              className="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow-md hover:bg-accent hover:text-white transition-colors control-button"
+              className="w-10 h-10 bg-amber-50 dark:bg-amber-800 rounded-full flex items-center justify-center 
+                shadow-md hover:bg-amber-100 dark:hover:bg-amber-700 hover:text-amber-800 dark:hover:text-amber-100 
+                transition-colors control-button rpg-button"
               aria-label="Zoom out"
             >
               -
             </button>
             <button
               onClick={handleReset}
-              className="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow-md hover:bg-accent hover:text-white transition-colors animate-viewportControlPulse control-button"
+              className="w-10 h-10 bg-amber-50 dark:bg-amber-800 rounded-full flex items-center justify-center 
+                shadow-md hover:bg-amber-100 dark:hover:bg-amber-700 hover:text-amber-800 dark:hover:text-amber-100 
+                transition-colors animate-viewportControlPulse control-button rpg-button"
               aria-label="Reset view"
             >
               ↻
@@ -544,14 +789,15 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
           </div>
           
           {/* Cluster navigation */}
-          <div className="absolute bottom-4 left-4 flex flex-wrap gap-2 max-w-xs">
+          <div className="absolute bottom-4 left-4 flex flex-wrap gap-2 max-w-xs rpg-controls p-2 rounded-xl">
             {Object.keys(roomsByCluster).map((clusterName, index) => (
               <button
                 key={clusterName}
                 onClick={() => centerOnCluster(index)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-full shadow-md transition-colors control-button animate-compass-glow
-                  ${getClusterColor(clusterName).replace('/20', '/80').replace('/30', '/100')} 
-                  text-white hover:bg-opacity-90`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-full shadow-md transition-colors 
+                  control-button rpg-button rpg-compass
+                  bg-amber-50 dark:bg-amber-800 text-amber-900 dark:text-amber-100
+                  hover:bg-amber-100 dark:hover:bg-amber-700`}
               >
                 {clusterName}
               </button>
@@ -565,7 +811,9 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
         <div className="absolute top-4 left-4 z-20">
           <button
             onClick={exitFocusMode}
-            className="px-4 py-2 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg text-sm flex items-center gap-2 hover:bg-accent hover:text-white transition-colors"
+            className="px-4 py-2 bg-amber-50/90 dark:bg-amber-800/90 text-amber-900 dark:text-amber-100 
+              rounded-full shadow-lg text-sm flex items-center gap-2 
+              hover:bg-amber-100 dark:hover:bg-amber-700 transition-colors rpg-button"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -577,9 +825,27 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
       
       {/* Show empty state if no rooms */}
       {rooms.length === 0 && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-gray-500 dark:text-gray-400">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-amber-800 dark:text-amber-200">
           <p className="text-lg mb-2">No rooms available</p>
           <p className="text-sm text-center">Your mind palace is still being constructed. Please add some games to your collection first.</p>
+        </div>
+      )}
+      
+      {/* Keyboard controls hint - show only when viewport is active but not focused */}
+      {isMouseOverViewport && !focusedRoom && (
+        <div className="absolute bottom-20 right-4 px-3 py-2 bg-amber-50/70 dark:bg-amber-800/70 rounded-lg text-amber-800 dark:text-amber-100 text-xs shadow-md animate-fadeIn">
+          <div className="flex items-center gap-1 mb-1">
+            <span className="px-1 border border-amber-700/30 rounded">←</span>
+            <span className="px-1 border border-amber-700/30 rounded">→</span>
+            <span className="px-1 border border-amber-700/30 rounded">↑</span>
+            <span className="px-1 border border-amber-700/30 rounded">↓</span>
+            <span className="ml-1">to navigate</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="px-1 border border-amber-700/30 rounded">+</span>
+            <span className="px-1 border border-amber-700/30 rounded">-</span>
+            <span className="ml-1">to zoom</span>
+          </div>
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaGamepad, FaStar, FaLock, FaArrowRight } from 'react-icons/fa';
 import { Room, BaseMindPalaceProps, getRoomBackground, getRoomPattern, getStatusColor } from '../types';
 import { IGame } from '@/models/Game';
@@ -22,6 +22,22 @@ const RoomCard: React.FC<RoomCardProps> = ({
   // Local state for hover and click animations
   const [isHovered, setIsHovered] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
   
   // Get the icon component based on room type
   const RoomIcon = iconComponents[room.type] || iconComponents.default;
@@ -35,7 +51,11 @@ const RoomCard: React.FC<RoomCardProps> = ({
     const baseClasses = `relative aspect-square cursor-pointer transition-all duration-300 
       ${room.isLocked ? 'opacity-70 grayscale' : ''} 
       ${game ? 'group' : ''}
-      ${isClicked ? 'animate-roomCardExit' : ''}`;
+      ${isClicked ? 'animate-roomCardExit' : ''}
+      bg-amber-50/70 dark:bg-amber-900/70 backdrop-blur-sm
+      rounded-xl overflow-hidden
+      border border-amber-800/20 dark:border-amber-200/20
+      shadow-md hover:shadow-lg`;
     
     switch (renderMode) {
       case 'static':
@@ -79,40 +99,41 @@ const RoomCard: React.FC<RoomCardProps> = ({
       onEnterRoom(e, game._id);
     }
   };
+  
+  // Handle mobile tap events
+  const handleMobileTap = (e: React.TouchEvent) => {
+    if (isMobile && game && !showTooltip) {
+      e.preventDefault();
+      setShowTooltip(true);
+      // Prevent immediate click through
+      return false;
+    }
+    return true;
+  };
 
   return (
-    <div 
+    <div
       className={getContainerClasses()}
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        if (!isMobile) setShowTooltip(false);
+      }}
+      onTouchStart={handleMobileTap}
       onKeyDown={handleKeyDown}
-      data-room-id={room.id}
-      data-room-type={room.type}
-      data-hovered={isHovered}
-      data-clicked={isClicked}
       tabIndex={0}
       role="button"
       aria-label={`${room.name} room${game ? ` containing ${game.title}` : ''}`}
     >
+      {/* Parchment texture overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-10 bg-repeat bg-[url('data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5z\' fill=\'%236b5237\' fill-opacity=\'1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E')]"></div>
+      
       {/* Room Card with Border Glow Effect */}
-      <div className={`absolute inset-1 rounded-2xl bg-gradient-to-br ${backgroundClass} opacity-40 blur-md transition-opacity ${!room.isLocked && isHovered ? 'opacity-70' : ''}`}></div>
+      <div className={`absolute inset-1 rounded-xl bg-gradient-to-br ${backgroundClass} opacity-40 blur-md transition-opacity ${!room.isLocked && isHovered ? 'opacity-70' : ''}`}></div>
       
       {/* Room Card Main Content */}
-      <div 
-        className={`relative h-full backdrop-blur-sm rounded-2xl flex flex-col justify-between 
-        border-2 border-white/10 bg-opacity-80 
-        ${room.isLocked ? 'bg-gray-700/50 dark:bg-gray-900/50' : 'bg-white/30 dark:bg-gray-800/30'} 
-        p-5 overflow-hidden shadow-[inset_0_0_15px_rgba(255,255,255,0.1)] ${patternClass}
-        transition-all duration-300 ${!room.isLocked && isHovered ? 'translate-y-[-5px] shadow-lg shadow-accent/20' : ''}`}
-      >
-        {/* Ornamental Corner Designs */}
-        <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-white/20 rounded-tl-xl"></div>
-        <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-white/20 rounded-tr-xl"></div>
-        <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-white/20 rounded-bl-xl"></div>
-        <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-white/20 rounded-br-xl"></div>
-        
-        {/* Room Header */}
+      <div className="relative flex flex-col items-center justify-between h-full p-4 z-10">
         <div className="flex flex-col items-center mb-2 z-10">
           {/* Room Icon */}
           <div className={`w-14 h-14 rounded-xl backdrop-blur-md bg-gradient-to-br ${backgroundClass} flex items-center justify-center text-white mb-3 
@@ -121,75 +142,60 @@ const RoomCard: React.FC<RoomCardProps> = ({
           </div>
           
           {/* Room Name */}
-          <h2 className="text-lg font-medium text-center drop-shadow text-gray-800 dark:text-white">{room.name}</h2>
+          <h2 className="text-lg font-medium text-center drop-shadow text-amber-900 dark:text-amber-100">{room.name}</h2>
           
           {/* Room Type */}
-          <div className="text-xs text-gray-700 dark:text-gray-300 mb-3 opacity-80">
+          <div className="text-xs text-amber-700 dark:text-amber-300 mb-3 opacity-80">
             {room.type !== 'locked' ? room.type : '???'}
           </div>
         </div>
         
         {/* Game Info (if a game is assigned) */}
         {game && (
-          <div className="flex-1 flex flex-col items-center justify-center pt-3 relative backdrop-blur-sm rounded-lg bg-white/20 dark:bg-black/20 p-3 border border-white/10">
-            {/* Game Placeholder Image */}
-            <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg mb-2 flex items-center justify-center overflow-hidden ring-0 transition-all duration-300 shadow-md
-              group-hover:ring-2 group-hover:ring-white/30">
-              {game.imageUrl ? (
-                <img 
-                  src={game.imageUrl} 
-                  alt={game.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              ) : (
-                <FaGamepad className="text-gray-400 dark:text-gray-500 text-2xl" />
-              )}
-            </div>
-            
-            {/* Game Title */}
-            <h3 className="text-sm font-medium text-center line-clamp-1 mb-1 text-gray-800 dark:text-white">
-              {game.title}
-            </h3>
-            
-            {/* Game Status */}
-            <div className={`text-xs px-3 py-1 rounded-full text-white ${getStatusColor(game.status)} mb-1 shadow-sm`}>
-              {game.status}
-            </div>
-            
-            {/* Game Rating (if rated) */}
-            {game.rating > 0 && (
-              <div className="flex items-center space-x-1 text-xs mt-1">
-                <FaStar className="text-yellow-500" />
-                <span className="text-gray-700 dark:text-gray-300">{game.rating}/10</span>
+          <div className="w-full mt-auto">
+            <div className="relative">
+              {/* Game title with separator */}
+              <div className="text-center mb-2">
+                <div className="h-px w-10 bg-amber-700/30 mx-auto mb-2"></div>
+                <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200 line-clamp-1">
+                  {game.title}
+                </h3>
               </div>
-            )}
-            
-            {/* Overlay that appears on hover */}
-            <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end items-center pb-4 rounded-lg
-              transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
-              <button 
-                className="px-3 py-1.5 bg-white/90 text-gray-800 hover:bg-white rounded-lg flex items-center text-sm mt-2 font-medium shadow-lg transition-all transform group-hover:scale-105"
-                onClick={handleEnterRoom}
-              >
-                Enter Room <FaArrowRight className="ml-1" />
-              </button>
+              
+              {/* Platform Badge */}
+              <div className="flex justify-center mt-1">
+                <span className="inline-block px-2 py-0.5 text-2xs bg-amber-100 dark:bg-amber-800 
+                  text-amber-800 dark:text-amber-100 rounded-full text-center">
+                  {game.platform || 'Unknown Platform'}
+                </span>
+              </div>
+              
+              {/* "Enter Room" Action Button - Shows on Hover */}
+              <div className={`absolute inset-x-0 bottom-0 transform transition-all duration-300 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 ${showTooltip ? 'opacity-100 translate-y-0' : ''}`}>
+                <button
+                  className="w-full py-1.5 px-3 mt-2 bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-100 
+                    rounded-lg flex items-center justify-center gap-1 text-xs font-medium shadow-sm 
+                    hover:bg-amber-700 hover:text-amber-50 dark:hover:bg-amber-600 dark:hover:text-amber-50
+                    transition-colors"
+                  onClick={handleEnterRoom}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  Enter Room
+                </button>
+              </div>
             </div>
           </div>
         )}
         
-        {/* Empty Game Placeholder */}
-        {!game && !room.isLocked && (
-          <div className="flex-1 flex flex-col items-center justify-center border-t border-white/10 pt-3">
-            <div className="text-sm text-gray-600 dark:text-gray-400 text-center">
-              No game assigned yet
-            </div>
-          </div>
-        )}
-        
-        {/* Locked Indicator */}
+        {/* Locked Room Overlay */}
         {room.isLocked && (
-          <div className="absolute top-0 right-0 p-2">
-            <FaLock className="text-gray-400" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-amber-900/20 backdrop-blur-sm rounded-xl">
+            <FaLock className="text-2xl text-amber-700 dark:text-amber-300 mb-2" />
+            <p className="text-sm text-amber-800 dark:text-amber-200 text-center px-4">
+              This room is currently locked
+            </p>
           </div>
         )}
       </div>

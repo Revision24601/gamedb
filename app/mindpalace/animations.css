@@ -659,4 +659,337 @@ body.page-transitioning {
 /* Smooth panning transition classes */
 .smooth-pan {
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Hand-drawn RPG map styles */
+.rpg-map-bg {
+  background-color: #f4ead0;
+  background-image: 
+    url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23b39d69' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23805e3b' fill-opacity='0.05'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  position: relative;
+}
+
+.rpg-map-bg::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23654e2a' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 5v1H5V0zm1 5v1H5v-1h1z'/%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+.rpg-map-grid {
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(107, 82, 55, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(107, 82, 55, 0.05) 1px, transparent 1px);
+}
+
+.rpg-cluster {
+  border: 2px solid rgba(75, 57, 38, 0.3);
+  box-shadow: 
+    inset 0 0 15px rgba(100, 75, 50, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.rpg-cluster::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  background: 
+    url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0V0zm10 17.5a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15zM10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12z' fill='%236b5237' fill-opacity='0.06' fill-rule='evenodd'/%3E%3C/svg%3E");
+  z-index: -1;
+  border-radius: inherit;
+  filter: drop-shadow(0 0 2px rgba(107, 82, 55, 0.2));
+}
+
+.rpg-cluster-title {
+  font-family: 'Cinzel', serif;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 3px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(107, 82, 55, 0.2);
+  position: relative;
+}
+
+.rpg-cluster-title::after {
+  content: "";
+  position: absolute;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  height: 10px;
+  background: linear-gradient(to bottom, rgba(107, 82, 55, 0.05), transparent);
+  z-index: -1;
+}
+
+.rpg-room {
+  border: 1px solid rgba(107, 82, 55, 0.3);
+  box-shadow: 
+    inset 0 0 5px rgba(100, 75, 50, 0.1),
+    0 3px 5px rgba(0, 0, 0, 0.1);
+  position: relative;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.rpg-room:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 
+    inset 0 0 8px rgba(100, 75, 50, 0.2),
+    0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.rpg-room-focused {
+  box-shadow: 
+    0 0 0 4px rgba(107, 82, 55, 0.3),
+    0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.rpg-controls {
+  background: rgba(244, 234, 208, 0.9);
+  border: 1px solid rgba(107, 82, 55, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rpg-button {
+  border: 1px solid rgba(107, 82, 55, 0.4);
+  box-shadow: 
+    inset 0 0 3px rgba(255, 255, 255, 0.7),
+    0 2px 3px rgba(0, 0, 0, 0.1);
+  font-family: 'Cinzel', serif;
+  transition: all 0.2s;
+}
+
+.rpg-button:hover {
+  box-shadow: 
+    inset 0 0 5px rgba(255, 255, 255, 0.9),
+    0 3px 5px rgba(0, 0, 0, 0.15);
+}
+
+.rpg-compass {
+  position: relative;
+}
+
+.rpg-compass::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  background: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='16' cy='16' r='14' stroke='%236b5237' stroke-width='1' fill='none' stroke-opacity='0.1' /%3E%3C/svg%3E") center/contain no-repeat;
+  opacity: 0.6;
+  z-index: -1;
+}
+
+/* Dreamy background animations */
+@keyframes floatingStar {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) scale(0.2);
+  }
+  20% {
+    opacity: 0.8;
+    transform: translateY(-10px) translateX(5px) scale(0.6);
+  }
+  60% {
+    opacity: 0.5;
+    transform: translateY(-30px) translateX(15px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-50px) translateX(20px) scale(0.8);
+  }
+}
+
+.animate-star {
+  animation: floatingStar 8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes dreamyCloud {
+  0% {
+    transform: translateX(-5%);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateX(0%);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(5%);
+    opacity: 0.3;
+  }
+}
+
+.animate-dream-cloud {
+  animation: dreamyCloud 40s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes dreamyCloud2 {
+  0% {
+    transform: translateX(5%);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateX(0%);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateX(-5%);
+    opacity: 0.2;
+  }
+}
+
+.animate-dream-cloud-alt {
+  animation: dreamyCloud2 50s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes dreamyPulse {
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+.animate-dream-pulse {
+  animation: dreamyPulse 10s ease-in-out infinite;
+  will-change: opacity;
+}
+
+/* Vignette pulsing effect */
+@keyframes vignettePulse {
+  0% {
+    box-shadow: inset 0 0 10vw 10vw rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: inset 0 0 15vw 15vw rgba(0, 0, 0, 0.15);
+  }
+  100% {
+    box-shadow: inset 0 0 10vw 10vw rgba(0, 0, 0, 0.1);
+  }
+}
+
+.animate-vignette {
+  animation: vignettePulse 30s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+/* Memory particles floating animation */
+@keyframes memoryParticle {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  90% {
+    opacity: 0.1;
+  }
+  100% {
+    transform: translateY(-100px) translateX(20px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.animate-memory-particle {
+  animation: memoryParticle 15s linear infinite;
+  will-change: transform, opacity;
+}
+
+/* Entrance zoom animation for first load */
+@keyframes entranceZoom {
+  0% {
+    transform: scale(0.3) translateY(30px);
+    opacity: 0;
+    filter: brightness(1.5) blur(10px);
+  }
+  30% {
+    opacity: 1;
+    filter: brightness(1.2) blur(5px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    filter: brightness(1) blur(0px);
+  }
+}
+
+.animate-entrance-zoom {
+  animation: entranceZoom 2.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  will-change: transform, opacity, filter;
+}
+
+/* Particle curtain effect for entrance */
+@keyframes particleCurtain {
+  0% {
+    opacity: 0.9;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+.animate-particle-curtain {
+  animation: particleCurtain 2s ease-out forwards;
+  animation-delay: 0.8s;
+  will-change: opacity, transform;
+}
+
+/* Glow veil effect for entrance */
+@keyframes glowVeil {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-glow-veil {
+  animation: glowVeil 2.2s ease-in-out forwards;
+  will-change: opacity;
+}
+
+/* Light sweep effect for entrance */
+@keyframes lightSweep {
+  0% {
+    transform: translateX(-100%) rotate(-5deg) skewX(5deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  80% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(100%) rotate(-5deg) skewX(5deg);
+    opacity: 0;
+  }
+}
+
+.animate-light-sweep {
+  animation: lightSweep 2.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  animation-delay: 0.5s;
+  will-change: transform, opacity;
 } 
