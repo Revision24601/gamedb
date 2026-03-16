@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     sortOptions[sortField] = sortOrder;
 
     // Pagination
-    const limit = queryParams.limit || 50;
+    const limit = queryParams.limit || 500;
     const skip = queryParams.page ? (queryParams.page - 1) * limit : 0;
 
     // Execute the query

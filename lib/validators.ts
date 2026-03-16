@@ -53,7 +53,7 @@ export const gameSearchSchema = z.object({
   platform: z.string().optional(),
   sort: z.enum(['title', 'rating', 'status', 'platform', 'hoursPlayed', 'updatedAt']).optional(),
   order: z.enum(['asc', 'desc']).optional(),
-  limit: z.number().min(1).max(100).optional(),
+  limit: z.number().min(1).max(500).optional(),
   page: z.number().min(1).optional(),
 });
 
