@@ -62,16 +62,16 @@ export default function Dashboard() {
         
         // Calculate insights
         const totalGames = allGamesData.games?.length || 0;
-        const completedGames = allGamesData.games?.filter(g => g.status === 'Completed').length || 0;
+        const completedGames = allGamesData.games?.filter((g: any) => g.status === 'Completed').length || 0;
         
-        const validRatings = allGamesData.games?.filter(g => g.rating !== undefined && g.rating !== null);
+        const validRatings = allGamesData.games?.filter((g: any) => g.rating !== undefined && g.rating !== null);
         const averageRating = validRatings?.length 
-          ? validRatings.reduce((sum, g) => sum + (g.rating || 0), 0) / validRatings.length 
+          ? validRatings.reduce((sum: number, g: any) => sum + (g.rating || 0), 0) / validRatings.length 
           : 0;
         
         // Calculate most used platform
-        const platformCounts = {};
-        allGamesData.games?.forEach(game => {
+        const platformCounts: Record<string, number> = {};
+        allGamesData.games?.forEach((game: any) => {
           if (game.platform) {
             platformCounts[game.platform] = (platformCounts[game.platform] || 0) + 1;
           }
@@ -163,7 +163,7 @@ export default function Dashboard() {
   };
 
   // Function to handle bar click to navigate to game detail
-  const handleBarClick = (data, index) => {
+  const handleBarClick = (data: any, index: any) => {
     if (data && data.activePayload && data.activePayload[0]) {
       const gameId = data.activePayload[0].payload._id;
       if (gameId) {
@@ -173,7 +173,7 @@ export default function Dashboard() {
   };
 
   // Function to make chart bars look clickable
-  const CustomCursor = (props) => {
+  const CustomCursor = (props: any) => {
     const { x, y, width, height, payload } = props;
     return (
       <rect

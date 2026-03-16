@@ -12,7 +12,7 @@ import type { IGame } from '@/models/Game';
 
 type GameStatus = 'Playing' | 'Completed' | 'On Hold' | 'Dropped' | 'Plan to Play';
 
-interface Game extends Omit<IGame, 'status'> {
+interface Game extends Omit<IGame, 'status' | 'createdAt' | 'updatedAt'> {
   _id: string;
   status: GameStatus;
   createdAt: string;
