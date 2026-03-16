@@ -9,6 +9,7 @@ export interface IGame {
   hoursPlayed: number;
   notes?: string;
   imageUrl?: string;
+  isFavorite?: boolean;
   userId?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -54,6 +55,10 @@ const gameSchema = new mongoose.Schema<IGame>(
     imageUrl: {
       type: String,
       trim: true,
+    },
+    isFavorite: {
+      type: Boolean,
+      default: false,
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,

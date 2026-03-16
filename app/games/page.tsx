@@ -1,35 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from '@/components/Header';
 import StarRating from '@/components/StarRating';
-import { FaGamepad, FaFilter, FaSort, FaPlus, FaStar, FaBook, FaSearch, FaClock } from 'react-icons/fa';
+import { FaGamepad, FaPlus, FaBook, FaSearch, FaClock, FaHeart } from 'react-icons/fa';
 import type { IGame } from '@/models/Game';
 
-const statusOptions = ['All', 'Playing', 'Completed', 'On Hold', 'Dropped', 'Plan to Play'] as const;
+const statusOptions = ['All', 'Favorites', 'Playing', 'Completed', 'On Hold', 'Dropped', 'Plan to Play'] as const;
 
-const statusColors = {
-  'Playing': 'bg-green-100 text-green-800 border border-green-200',
-  'Completed': 'bg-blue-100 text-blue-800 border border-blue-200',
-  'On Hold': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
-  'Dropped': 'bg-red-100 text-red-800 border border-red-200',
-  'Plan to Play': 'bg-purple-100 text-purple-800 border border-purple-200',
+type SortField = 'recent' | 'title' | 'rating' | 'hoursPlayed';
+
+const statusColors: Record<string, string> = {
+  'Playing': 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
+  'Completed': 'bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+  'On Hold': 'bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
+  'Dropped': 'bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
+  'Plan to Play': 'bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800',
 };
 
 export default function GamesPage() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('search');
   
-  const [games, setGames] = useState<IGame[]>([]);
+  const [allGames, setAllGames] = useState<IGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('All');
-  const [sortBy, setSortBy] = useState<'title' | 'rating' | 'status'>('title');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<SortField>('recent');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
+  // Fetch all games once
   useEffect(() => {
     const fetchGames = async () => {
       setLoading(true);
@@ -37,24 +40,10 @@ export default function GamesPage() {
         const url = searchQuery 
           ? `/api/games?search=${encodeURIComponent(searchQuery)}` 
           : '/api/games';
-        
         const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch games');
-        }
-        
+        if (!response.ok) throw new Error('Failed to fetch games');
         const data = await response.json();
-        
-        // Extract the games array from the response
-        const gamesArray = data.games || [];
-        
-        // Filter games by status if not 'All'
-        const filteredGames = selectedStatus === 'All'
-          ? gamesArray
-          : gamesArray.filter((game: IGame) => game.status === selectedStatus);
-        
-        setGames(filteredGames);
+        setAllGames(data.games || []);
       } catch (err) {
         setError('Error loading games. Please try again later.');
         console.error(err);
@@ -62,38 +51,67 @@ export default function GamesPage() {
         setLoading(false);
       }
     };
-    
     fetchGames();
-  }, [searchQuery, selectedStatus]);
-  
-  // Handle case where games might be null or undefined
-  const sortedGames = games && games.length > 0 
-    ? [...games].sort((a, b) => {
-        if (sortBy === 'title') {
-          return sortOrder === 'asc' 
-            ? a.title.localeCompare(b.title)
-            : b.title.localeCompare(a.title);
-        } else if (sortBy === 'rating') {
-          return sortOrder === 'asc' 
-            ? a.rating - b.rating
-            : b.rating - a.rating;
-        } else {
-          return sortOrder === 'asc' 
-            ? a.status.localeCompare(b.status)
-            : b.status.localeCompare(a.status);
-        }
-      })
-    : [];
-  
-  const handleSortChange = (newSortBy: 'title' | 'rating' | 'status') => {
-    if (sortBy === newSortBy) {
+  }, [searchQuery]);
+
+  // Compute counts for each status (from full unfiltered list)
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: allGames.length, Favorites: 0 };
+    allGames.forEach((game: any) => {
+      counts[game.status] = (counts[game.status] || 0) + 1;
+      if (game.isFavorite) counts.Favorites++;
+    });
+    return counts;
+  }, [allGames]);
+
+  // Filter by status (client-side from already-fetched data)
+  const filteredGames = useMemo(() => {
+    if (selectedStatus === 'All') return allGames;
+    if (selectedStatus === 'Favorites') return allGames.filter((g: any) => g.isFavorite);
+    return allGames.filter((g) => g.status === selectedStatus);
+  }, [allGames, selectedStatus]);
+
+  // Sort
+  const sortedGames = useMemo(() => {
+    if (!filteredGames.length) return [];
+    return [...filteredGames].sort((a: any, b: any) => {
+      let cmp = 0;
+      switch (sortBy) {
+        case 'recent':
+          cmp = new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
+          break;
+        case 'title':
+          cmp = a.title.localeCompare(b.title);
+          break;
+        case 'rating':
+          cmp = (b.rating || 0) - (a.rating || 0);
+          break;
+        case 'hoursPlayed':
+          cmp = (b.hoursPlayed || 0) - (a.hoursPlayed || 0);
+          break;
+      }
+      return sortOrder === 'desc' ? cmp : -cmp;
+    });
+  }, [filteredGames, sortBy, sortOrder]);
+
+  const handleSortChange = (newSort: SortField) => {
+    if (sortBy === newSort) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortBy(newSortBy);
-      setSortOrder('asc');
+      setSortBy(newSort);
+      setSortOrder(newSort === 'title' ? 'asc' : 'desc');
     }
   };
-  
+
+  const sortBtnClass = (field: SortField) =>
+    `px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 border transition-all ${
+      sortBy === field
+        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-primary-200 dark:border-primary-800'
+        : 'bg-white/50 dark:bg-slate-700/50 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600'
+    }`;
+
+  const arrow = (field: SortField) => sortBy === field ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : '';
+
   return (
     <main className="min-h-screen">
       <Header />
@@ -102,63 +120,64 @@ export default function GamesPage() {
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
-              <FaBook className="text-accent" />
-              {searchQuery ? `Search Results: "${searchQuery}"` : 'My Collection'}
+              <FaBook className="text-primary-500" />
+              {searchQuery ? `Results: "${searchQuery}"` : 'My Collection'}
             </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">
-              {searchQuery 
-                ? 'Games that match your search query' 
-                : 'Your personal gaming library and memories'}
+            <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+              {searchQuery ? 'Games matching your search' : `${allGames.length} games in your library`}
             </p>
           </div>
           
-          <Link 
-            href="/games/new" 
-            className="btn-primary flex items-center self-start md:self-auto shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-          >
-            <FaPlus className="mr-2" />
-            Add to Collection
+          <Link href="/games/new" className="btn-primary flex items-center gap-2 self-start md:self-auto">
+            <FaPlus className="text-xs" /> Add Game
           </Link>
         </div>
         
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-8">
+        {/* Filter + Sort bar */}
+        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-gray-100 dark:border-slate-700 p-4 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
-              {statusOptions.map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setSelectedStatus(status)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border transition-all duration-200 ${
-                    selectedStatus === status
-                      ? 'bg-accent/90 text-white border-accent/30 shadow-md'
-                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
+            {/* Status tabs with counts */}
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+              {statusOptions.map((status) => {
+                const count = statusCounts[status] || 0;
+                const isActive = selectedStatus === status;
+                return (
+                  <button
+                    key={status}
+                    onClick={() => setSelectedStatus(status)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${
+                      isActive
+                        ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+                        : 'bg-white/50 dark:bg-slate-700/50 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600'
+                    }`}
+                  >
+                    {status === 'Favorites' ? '♥ Favorites' : status}
+                    {count > 0 && (
+                      <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
+                        isActive ? 'bg-white/20' : 'bg-gray-200/80 dark:bg-slate-600'
+                      }`}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
             
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={() => handleSortChange('title')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1 border transition-all ${
-                  sortBy === 'title' 
-                    ? 'bg-accent/10 text-accent border-accent/20' 
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600'
-                }`}
-              >
-                Name {sortBy === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
+            {/* Sort buttons */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider mr-1">Sort:</span>
+              <button onClick={() => handleSortChange('recent')} className={sortBtnClass('recent')}>
+                Recent{arrow('recent')}
               </button>
-              <button
-                onClick={() => handleSortChange('rating')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1 border transition-all ${
-                  sortBy === 'rating' 
-                    ? 'bg-accent/10 text-accent border-accent/20' 
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600'
-                }`}
-              >
-                Rating {sortBy === 'rating' && (sortOrder === 'asc' ? '↑' : '↓')}
+              <button onClick={() => handleSortChange('title')} className={sortBtnClass('title')}>
+                Name{arrow('title')}
+              </button>
+              <button onClick={() => handleSortChange('rating')} className={sortBtnClass('rating')}>
+                Rating{arrow('rating')}
+              </button>
+              <button onClick={() => handleSortChange('hoursPlayed')} className={sortBtnClass('hoursPlayed')}>
+                Hours{arrow('hoursPlayed')}
               </button>
             </div>
           </div>
@@ -166,52 +185,56 @@ export default function GamesPage() {
         
         {loading ? (
           <div className="flex justify-center items-center py-16">
-            <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-accent border-r-transparent"></div>
-            <p className="ml-4 text-gray-600 dark:text-gray-400">Finding your treasures...</p>
+            <div className="loading-spinner"></div>
+            <p className="ml-4 text-gray-500 dark:text-gray-400 text-sm">Loading collection...</p>
           </div>
         ) : error ? (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-6 rounded-xl text-center">
             <p className="text-red-600 dark:text-red-400">{error}</p>
           </div>
         ) : sortedGames.length === 0 ? (
-          <div className="text-center py-12 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="text-center py-12 card p-8">
             {searchQuery ? (
               <>
-                <FaSearch className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                <h3 className="text-xl font-medium text-gray-800 dark:text-white">No matches found</h3>
-                <p className="mt-2 text-gray-500 dark:text-gray-400">
-                  We couldn't find any games matching "{searchQuery}"
+                <FaSearch className="mx-auto h-10 w-10 text-gray-400 mb-3" />
+                <h3 className="text-lg font-medium text-gray-800 dark:text-white">No matches found</h3>
+                <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
+                  No games matching &ldquo;{searchQuery}&rdquo;
+                </p>
+              </>
+            ) : selectedStatus === 'Favorites' ? (
+              <>
+                <FaHeart className="mx-auto h-10 w-10 text-gray-400 mb-3" />
+                <h3 className="text-lg font-medium text-gray-800 dark:text-white">No favorites yet</h3>
+                <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
+                  Click the heart icon on any game to mark it as a favorite.
                 </p>
               </>
             ) : (
               <>
-                <FaGamepad className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                <h3 className="text-xl font-medium text-gray-800 dark:text-white">Your collection is empty</h3>
-                <p className="mt-2 text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                  Start building your personal gaming journal by adding the games you love.
+                <FaGamepad className="mx-auto h-10 w-10 text-gray-400 mb-3" />
+                <h3 className="text-lg font-medium text-gray-800 dark:text-white">
+                  {selectedStatus === 'All' ? 'Your collection is empty' : `No ${selectedStatus} games`}
+                </h3>
+                <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm max-w-md mx-auto">
+                  Start building your gaming journal by adding games you love.
                 </p>
+                <Link href="/games/new" className="btn-primary inline-flex items-center gap-2 mt-4">
+                  <FaPlus className="text-xs" /> Add Your First Game
+                </Link>
               </>
             )}
-            <div className="mt-6">
-              <Link 
-                href="/games/new" 
-                className="btn-primary inline-flex items-center shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-              >
-                <FaPlus className="mr-2" />
-                Add Your First Game
-              </Link>
-            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {sortedGames.map((game) => (
+            {sortedGames.map((game: any) => (
               <Link 
                 key={game._id} 
                 href={`/games/${game._id}`}
                 className="group"
               >
-                <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transform transition-all duration-300 hover:shadow-md hover:scale-102 hover:-translate-y-1">
-                  <div className="relative h-48 w-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                <div className="card card-hover overflow-hidden">
+                  <div className="relative h-48 w-full bg-gray-100 dark:bg-slate-700 overflow-hidden">
                     {game.imageUrl ? (
                       <Image
                         src={game.imageUrl}
@@ -221,36 +244,39 @@ export default function GamesPage() {
                       />
                     ) : (
                       <div className="flex items-center justify-center h-full">
-                        <FaGamepad className="h-12 w-12 text-gray-400" />
+                        <FaGamepad className="h-10 w-10 text-gray-300 dark:text-gray-600" />
                       </div>
                     )}
                     <div className="absolute top-3 right-3">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium shadow-sm ${statusColors[game.status]}`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium ${statusColors[game.status] || ''}`}>
                         {game.status}
                       </span>
                     </div>
+                    {game.isFavorite && (
+                      <div className="absolute top-3 left-3">
+                        <FaHeart className="text-red-500 text-sm drop-shadow" />
+                      </div>
+                    )}
                   </div>
-                  <div className="p-5">
-                    <h3 className="text-lg font-medium text-gray-800 dark:text-white truncate group-hover:text-accent transition-colors">
+                  <div className="p-4">
+                    <h3 className="font-medium text-gray-800 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                       {game.title}
                     </h3>
                     {game.platform && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {game.platform}
-                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{game.platform}</p>
                     )}
-                    <div className="mt-3 flex items-center">
-                      <StarRating rating={game.rating} readonly size="sm" />
-                      <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                        {game.rating}/10
-                      </span>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="flex items-center">
+                        <StarRating rating={game.rating} readonly size="sm" />
+                        <span className="ml-1.5 text-xs text-gray-500">{game.rating}/10</span>
+                      </div>
+                      {game.hoursPlayed > 0 && (
+                        <span className="text-xs text-gray-400 flex items-center gap-1">
+                          <FaClock className="text-[10px]" />
+                          {game.hoursPlayed}h
+                        </span>
+                      )}
                     </div>
-                    {game.hoursPlayed > 0 && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 flex items-center">
-                        <FaClock className="mr-1.5 text-accent" />
-                        {game.hoursPlayed} hours played
-                      </p>
-                    )}
                   </div>
                 </div>
               </Link>
@@ -260,4 +286,4 @@ export default function GamesPage() {
       </div>
     </main>
   );
-} 
+}

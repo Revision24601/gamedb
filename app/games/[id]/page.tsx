@@ -8,7 +8,7 @@ import Header from '@/components/Header';
 import StarRating from '@/components/StarRating';
 import StatusSelector from '@/components/StatusSelector';
 import { useToast } from '@/components/ToastProvider';
-import { FaEdit, FaTrash, FaArrowLeft, FaGamepad, FaClock, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaArrowLeft, FaGamepad, FaClock, FaPlus, FaHeart, FaRegHeart } from 'react-icons/fa';
 import type { IGame } from '@/models/Game';
 
 type GameStatus = 'Playing' | 'Completed' | 'On Hold' | 'Dropped' | 'Plan to Play';
@@ -78,6 +78,11 @@ export default function GameDetailPage({ params }: { params: { id: string } }) {
     updateGame({ rating: newRating }, `Rating saved: ${newRating}/10`);
   };
 
+  const handleToggleFavorite = () => {
+    const newVal = !(game as any)?.isFavorite;
+    updateGame({ isFavorite: newVal } as any, newVal ? 'Added to favorites ♥' : 'Removed from favorites');
+  };
+
   const handleAddHours = () => {
     const hours = parseFloat(hoursToAdd);
     if (isNaN(hours) || hours <= 0) {
@@ -145,9 +150,22 @@ export default function GameDetailPage({ params }: { params: { id: string } }) {
         </Link>
 
         <div className="space-y-8">
-          {/* Title + platform + hours */}
+          {/* Title + favorite + platform + hours */}
           <div>
-            <h1 className="journal-title">{game.title}</h1>
+            <div className="flex items-start gap-3">
+              <h1 className="journal-title flex-1">{game.title}</h1>
+              <button
+                onClick={handleToggleFavorite}
+                className={`mt-2 p-2 rounded-lg transition-all ${
+                  (game as any).isFavorite 
+                    ? 'text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30' 
+                    : 'text-gray-300 dark:text-gray-600 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10'
+                }`}
+                title={(game as any).isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+              >
+                {(game as any).isFavorite ? <FaHeart className="text-xl" /> : <FaRegHeart className="text-xl" />}
+              </button>
+            </div>
             <div className="flex flex-wrap items-center gap-4 text-gray-500 dark:text-gray-400 text-sm">
               <span className="flex items-center gap-1.5">
                 <FaGamepad className="text-primary-500" />

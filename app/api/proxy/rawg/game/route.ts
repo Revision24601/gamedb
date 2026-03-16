@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-const RAWG_API_KEY = 'c564933cc32c473e86b0c5034ee99427'; // Consider moving this to environment variables
+const RAWG_API_KEY = process.env.RAWG_API_KEY || 'c564933cc32c473e86b0c5034ee99427';
 const RAWG_BASE_URL = 'https://api.rawg.io/api';
 
 export async function GET(request: NextRequest) {

@@ -3,8 +3,14 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ['media.rawg.io'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'media.rawg.io',
+        pathname: '/**',
+      },
+    ],
   },
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;

@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Game from '@/models/Game';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await dbConnect();
     
     const url = new URL(req.url);
@@ -14,10 +23,11 @@ export async function GET(req: NextRequest) {
     }
     
     const games = await Game.find({
-      title: { $regex: query, $options: 'i' }
+      userId: session.user.id,
+      title: { $regex: query, $options: 'i' },
     })
     .limit(10)
-    .select('title coverImage')
+    .select('title imageUrl')
     .sort({ title: 1 });
     
     return NextResponse.json(games);
@@ -28,4 +38,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

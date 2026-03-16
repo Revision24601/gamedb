@@ -12,15 +12,22 @@ export const gameStatusEnum = z.enum([
 // Platform validation
 export const gamePlatformEnum = z.enum([
   'PC',
+  'Steam Deck',
   'PlayStation 5',
   'PlayStation 4',
+  'PlayStation 3',
+  'PS Vita',
   'Xbox Series X/S',
   'Xbox One',
+  'Xbox 360',
   'Nintendo Switch',
+  'Nintendo 3DS',
+  'Wii U',
   'MacOS',
   'Linux',
   'iOS',
   'Android',
+  'Retro',
   'Other',
 ]);
 
@@ -33,6 +40,7 @@ export const gameCreateSchema = z.object({
   hoursPlayed: z.number().min(0).default(0),
   imageUrl: z.string().url().optional().nullable(),
   notes: z.string().max(2000, 'Notes are too long').optional().nullable(),
+  isFavorite: z.boolean().optional().default(false),
 });
 
 // Game schema validation for updates
@@ -43,7 +51,7 @@ export const gameSearchSchema = z.object({
   search: z.string().optional(),
   status: gameStatusEnum.optional(),
   platform: z.string().optional(),
-  sort: z.enum(['title', 'rating', 'status', 'platform', 'hoursPlayed']).optional(),
+  sort: z.enum(['title', 'rating', 'status', 'platform', 'hoursPlayed', 'updatedAt']).optional(),
   order: z.enum(['asc', 'desc']).optional(),
   limit: z.number().min(1).max(100).optional(),
   page: z.number().min(1).optional(),
@@ -67,4 +75,4 @@ export type GameId = z.infer<typeof gameIdSchema>;
 // Helper function to validate MongoDB ObjectId
 export function isValidObjectId(id: string): boolean {
   return /^[0-9a-fA-F]{24}$/.test(id);
-} 
+}
