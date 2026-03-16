@@ -130,7 +130,7 @@ export default function SteamImportPage() {
       const gameObjects = toImport.map((g) => ({
         title: g.name,
         platform: 'PC',
-        status: 'Plan to Play',
+        status: g.playtimeHours > 0 ? 'Playing' : 'Plan to Play',
         rating: 0,
         hoursPlayed: g.playtimeHours,
         imageUrl: g.headerUrl,
