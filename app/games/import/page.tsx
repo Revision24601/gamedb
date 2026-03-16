@@ -28,9 +28,9 @@ const platforms = [
     name: 'Xbox',
     icon: FaXbox,
     color: '#107c10',
-    available: false,
-    description: 'Import your Xbox game library (coming soon)',
-    href: '#',
+    available: true,
+    description: 'Import your Xbox game library via Gamertag',
+    href: '/games/import/xbox',
   },
 ];
 
