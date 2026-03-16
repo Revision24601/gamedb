@@ -144,7 +144,7 @@ body {
 
 /* Journal / Dashboard page style */
 .journal-page {
-  @apply min-h-screen bg-white dark:bg-slate-900;
+  @apply min-h-screen;
 }
 
 .journal-title {

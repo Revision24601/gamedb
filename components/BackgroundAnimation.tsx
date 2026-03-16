@@ -23,7 +23,10 @@ export default function BackgroundAnimation() {
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      {/* Fog layers — much more visible now */}
+      {/* Base color — replaces the body background so fog shows on top */}
+      <div className="absolute inset-0 bg-[#f0f1f5] dark:bg-[#0c1322]" />
+
+      {/* Fog layers */}
       <div className="absolute left-0 w-[200%] h-[250px] top-[5%] blur-[50px] animate-fogDrift1"
         style={{ background: 'linear-gradient(90deg, transparent, rgba(160,160,160,0.25), rgba(180,180,180,0.35), rgba(160,160,160,0.25), transparent)' }} />
       <div className="absolute left-0 w-[200%] h-[200px] top-[30%] blur-[60px] animate-fogDrift2"

@@ -29,7 +29,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${raleway.className} ${caveat.variable} font-light bg-surface-light dark:bg-surface-dark text-gray-900 dark:text-white`}>
+      <body className={`${raleway.className} ${caveat.variable} font-light text-gray-900 dark:text-white`}>
         <Providers>
           <BackgroundAnimation />
           <Suspense fallback={null}>

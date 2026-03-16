@@ -4,7 +4,7 @@ export default function MindPalaceLoading() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-gray-900">
+      <main className="min-h-screen">
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Title skeleton */}
           <div className="flex flex-col items-center mb-6">
