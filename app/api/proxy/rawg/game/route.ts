@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 const RAWG_API_KEY = 'c564933cc32c473e86b0c5034ee99427'; // Consider moving this to environment variables
 const RAWG_BASE_URL = 'https://api.rawg.io/api';
 
@@ -19,8 +21,8 @@ export async function GET(request: NextRequest) {
     // Construct the RAWG API URL
     const url = `${RAWG_BASE_URL}/games/${gameId}?key=${RAWG_API_KEY}`;
     
-    // Fetch data from RAWG API
-    const response = await fetch(url);
+    // Fetch data from RAWG API (no-store to prevent caching in production)
+    const response = await fetch(url, { cache: 'no-store' });
     
     if (!response.ok) {
       throw new Error(`RAWG API responded with status: ${response.status}`);
@@ -28,7 +30,6 @@ export async function GET(request: NextRequest) {
     
     const data = await response.json();
     
-    // Return the data
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error proxying to RAWG API:', error);

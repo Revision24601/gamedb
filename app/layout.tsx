@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter, Caveat } from 'next/font/google';
+import { Suspense } from 'react';
 import { Providers } from './providers';
 import NavigationProgress from '@/components/NavigationProgress';
 
@@ -25,7 +26,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} ${caveat.variable} bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white`}>
         <Providers>
-          <NavigationProgress />
+          <Suspense fallback={null}>
+            <NavigationProgress />
+          </Suspense>
           {children}
         </Providers>
       </body>
