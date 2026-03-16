@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
 import { FaStar, FaArrowLeft, FaSearch } from 'react-icons/fa';
@@ -19,8 +19,44 @@ const platformOptions = Object.values(gamePlatformEnum.enum);
 
 export default function NewGame() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<GameFormData>();
+
+  // Pre-fill form from URL query params (from SearchBar quick-add)
+  useEffect(() => {
+    const title = searchParams.get('title');
+    const imageUrl = searchParams.get('imageUrl');
+    const platform = searchParams.get('platform');
+    const released = searchParams.get('released');
+    const genres = searchParams.get('genres');
+
+    if (title) setValue('title', title);
+    if (imageUrl) setValue('imageUrl', imageUrl);
+
+    // Map platform name to our dropdown options
+    if (platform) {
+      const platformLower = platform.toLowerCase();
+      let selectedPlatform = 'Other';
+      for (const p of platformOptions) {
+        if (platformLower.includes(p.toLowerCase())) { selectedPlatform = p; break; }
+      }
+      if (platformLower.includes('playstation 4') || platformLower.includes('ps4')) selectedPlatform = 'PlayStation 4';
+      else if (platformLower.includes('playstation 5') || platformLower.includes('ps5')) selectedPlatform = 'PlayStation 5';
+      else if (platformLower.includes('xbox one')) selectedPlatform = 'Xbox One';
+      else if (platformLower.includes('xbox series')) selectedPlatform = 'Xbox Series X/S';
+      else if (platformLower.includes('switch')) selectedPlatform = 'Nintendo Switch';
+      else if (platformLower.includes('windows') || platformLower.includes('pc')) selectedPlatform = 'PC';
+      else if (platformLower.includes('mac') || platformLower.includes('macos') || platformLower.includes('os x')) selectedPlatform = 'MacOS';
+      setValue('platform', selectedPlatform);
+    }
+
+    // Build notes from release date and genres
+    const notesParts: string[] = [];
+    if (released) notesParts.push(`Release Date: ${released}`);
+    if (genres) notesParts.push(`Genres: ${genres}`);
+    if (notesParts.length > 0) setValue('notes', notesParts.join('\n'));
+  }, [searchParams, setValue]);
 
   // Game search state
   const [searchQuery, setSearchQuery] = useState('');
