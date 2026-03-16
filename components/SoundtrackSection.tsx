@@ -145,14 +145,26 @@ export default function SoundtrackSection({ gameTitle, composer }: SoundtrackSec
                 <iframe
                   src={active.embedUrl}
                   width="100%"
-                  height="352"
+                  height="152"
                   frameBorder="0"
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                   loading="lazy"
                   className="rounded-xl"
+                  style={{ borderRadius: '12px' }}
                   title={`${active.name} on Spotify`}
                 />
               </div>
+
+              {/* Direct Spotify link — clear play action */}
+              <a
+                href={active.spotifyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 px-6 py-3 rounded-xl bg-[#1DB954] hover:bg-[#1ed760] text-white font-medium transition-colors mt-3"
+              >
+                <FaSpotify className="text-xl" />
+                Play on Spotify
+              </a>
 
               {/* Tracklist */}
               {spotifyData?.tracks && spotifyData.tracks.length > 0 && (
