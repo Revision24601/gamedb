@@ -10,37 +10,38 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#1a1a1a",
-          50: "#f5f5f5",
-          100: "#e6e6e6",
-          200: "#cccccc",
-          300: "#b3b3b3",
-          400: "#999999",
-          500: "#808080",
-          600: "#666666",
-          700: "#4d4d4d",
-          800: "#333333",
-          900: "#1a1a1a"
+          DEFAULT: "#4f46e5",
+          50: "#eef2ff",
+          100: "#e0e7ff",
+          200: "#c7d2fe",
+          300: "#a5b4fc",
+          400: "#818cf8",
+          500: "#6366f1",
+          600: "#4f46e5",
+          700: "#4338ca",
+          800: "#3730a3",
+          900: "#312e81",
+          950: "#1e1b4b",
         },
-        secondary: {
-          DEFAULT: "#2d2d2d",
-          50: "#f7f7f7",
-          100: "#e3e3e3",
-          200: "#c8c8c8",
-          300: "#a4a4a4",
-          400: "#818181",
-          500: "#666666",
-          600: "#515151",
-          700: "#434343",
-          800: "#2d2d2d",
-          900: "#1f1f1f"
+        accent: {
+          DEFAULT: "#f59e0b",
+          light: "#fbbf24",
+          dark: "#d97706",
         },
-        accent: "#4a9eff"
+        surface: {
+          light: "#f8fafc",
+          DEFAULT: "#f1f5f9",
+          dark: "#0f172a",
+          "dark-alt": "#1e293b",
+        },
       },
       fontFamily: {
         handwriting: ['Caveat', 'Comic Sans MS', 'cursive'],
       },
+      backgroundImage: {
+        'hero-pattern': 'radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.15) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(245, 158, 11, 0.1) 0%, transparent 50%)',
+      },
     },
   },
   plugins: [],
-}; 
+};

@@ -31,7 +31,7 @@ export default function LoginPage() {
         router.push('/');
         router.refresh();
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -39,12 +39,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-600 to-primary-800 px-4">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-900 via-primary-800 to-primary-950 px-4 relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-accent/10 rounded-full blur-3xl" />
+
+      <div className="relative max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-2xl shadow-black/20 p-8 border border-gray-100 dark:border-slate-700">
         <div className="flex flex-col items-center mb-8">
-          <FaGamepad className="h-12 w-12 text-primary-600 mb-3" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome to GameDB</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Sign in to your account</p>
+          <div className="w-14 h-14 rounded-xl bg-primary-600 flex items-center justify-center mb-4 shadow-lg shadow-primary-600/30">
+            <FaGamepad className="h-7 w-7 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome back</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Sign in to your GameDB account</p>
         </div>
 
         {error && (
@@ -53,49 +59,41 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email
-            </label>
+            <label htmlFor="email" className="label">Email</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
+              className="input"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Password
-            </label>
+            <label htmlFor="password" className="label">Password</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
-              placeholder="••••••••"
+              className="input"
+              placeholder="Enter your password"
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base">
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-          Don't have an account?{' '}
-          <Link href="/register" className="text-primary-600 hover:text-primary-500 font-medium">
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
             Create one
           </Link>
         </p>
