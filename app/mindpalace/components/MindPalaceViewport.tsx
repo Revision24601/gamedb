@@ -460,7 +460,6 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
       // Add key to pressed keys set
       keysPressed.add(e.key);
       
-      // Navigation speed - adjust based on current zoom level
       const moveSpeed = 100 / scale;
       
       // Handle immediate actions that don't need continuous movement
@@ -483,78 +482,64 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
         case 'ArrowDown':
         case 'ArrowLeft':
         case 'ArrowRight':
-          e.preventDefault(); // Prevent page scrolling
+          e.preventDefault();
+          startLoop(); // Start the keyboard animation loop
           break;
       }
     };
     
-    // Handle key release to stop movement
+    // Handle key release
     const handleKeyUp = (e: KeyboardEvent) => {
-      // Remove key from pressed keys set
       keysPressed.delete(e.key);
-      
-      // If it was an arrow key, update target immediately to match current position
-      // This ensures immediate stopping when keys are released
+      // When all arrow keys are released, stop the target from moving further
+      // by using functional setState to snap target to current value
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        // If no other arrow keys are pressed, immediately stop movement
         const hasOtherArrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].some(key => 
           key !== e.key && keysPressed.has(key)
         );
-        
         if (!hasOtherArrowKeys) {
-          setTargetTranslateX(translateX);
-          setTargetTranslateY(translateY);
+          // Use functional form to get the CURRENT value, not the stale closure
+          setTargetTranslateX(prev => prev);
+          setTargetTranslateY(prev => prev);
         }
       }
     };
     
-    // Create a function that processes the current state of pressed keys
-    // to move the viewport at a consistent rate
+    // Process currently pressed keys for movement
     const processKeys = () => {
       if (!isMouseOverViewport && !focusedRoom) return;
       if (isZoomingToRoom || focusedRoom) return;
       
-      // Check if any arrow keys are pressed
-      const isArrowKeyPressed = keysPressed.has('ArrowUp') || 
-                               keysPressed.has('ArrowDown') || 
-                               keysPressed.has('ArrowLeft') || 
-                               keysPressed.has('ArrowRight');
+      const hasArrowKey = keysPressed.has('ArrowUp') || keysPressed.has('ArrowDown') || 
+                          keysPressed.has('ArrowLeft') || keysPressed.has('ArrowRight');
       
-      // If no arrow keys are pressed, make sure the target position matches the current position
-      // This ensures the viewport stops moving when keys are released
-      if (!isArrowKeyPressed) {
-        setTargetTranslateX(translateX);
-        setTargetTranslateY(translateY);
-        return;
-      }
+      // Only move if arrow keys are pressed — do NOT reset when idle
+      if (!hasArrowKey) return;
       
-      // Only apply movement if relevant keys are pressed
-      const moveSpeed = 15 / scale; // Reduced speed for smoother movement
+      const moveSpeed = 15 / scale;
       
-      if (keysPressed.has('ArrowUp')) {
-        setTargetTranslateY(prev => prev + moveSpeed);
-      }
-      if (keysPressed.has('ArrowDown')) {
-        setTargetTranslateY(prev => prev - moveSpeed);
-      }
-      if (keysPressed.has('ArrowLeft')) {
-        setTargetTranslateX(prev => prev + moveSpeed);
-      }
-      if (keysPressed.has('ArrowRight')) {
-        setTargetTranslateX(prev => prev - moveSpeed);
-      }
+      if (keysPressed.has('ArrowUp')) setTargetTranslateY(prev => prev + moveSpeed);
+      if (keysPressed.has('ArrowDown')) setTargetTranslateY(prev => prev - moveSpeed);
+      if (keysPressed.has('ArrowLeft')) setTargetTranslateX(prev => prev + moveSpeed);
+      if (keysPressed.has('ArrowRight')) setTargetTranslateX(prev => prev - moveSpeed);
     };
     
-    // Set up an animation frame loop to process keys at a consistent rate
-    let animationFrameId: number;
+    // Only run animation loop when keys are actively pressed
+    let animationFrameId: number | null = null;
     
     const keyAnimationLoop = () => {
       processKeys();
-      animationFrameId = requestAnimationFrame(keyAnimationLoop);
+      if (keysPressed.size > 0) {
+        animationFrameId = requestAnimationFrame(keyAnimationLoop);
+      } else {
+        animationFrameId = null;
+      }
     };
     
-    // Start the animation loop
-    keyAnimationLoop();
+    // Start loop on keydown, not unconditionally
+    const startLoop = () => {
+      if (animationFrameId === null) keyAnimationLoop();
+    };
     
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
@@ -563,7 +548,7 @@ const MindPalaceViewport: React.FC<MindPalaceViewportProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
       keysPressed.clear();
     };
   }, [isMouseOverViewport, focusedRoom, isZoomingToRoom, scale]);
