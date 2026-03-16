@@ -42,25 +42,8 @@ module.exports = {
         'hero-pattern': 'radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.15) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(245, 158, 11, 0.1) 0%, transparent 50%)',
       },
       animation: {
-        orb1: 'orb1 25s ease-in-out infinite',
-        orb2: 'orb2 30s ease-in-out infinite',
-        orb3: 'orb3 35s ease-in-out infinite',
-      },
-      keyframes: {
-        orb1: {
-          '0%, 100%': { transform: 'translate(0, 0)' },
-          '33%': { transform: 'translate(80px, 40px)' },
-          '66%': { transform: 'translate(-40px, 80px)' },
-        },
-        orb2: {
-          '0%, 100%': { transform: 'translate(0, 0)' },
-          '33%': { transform: 'translate(-60px, -30px)' },
-          '66%': { transform: 'translate(40px, -60px)' },
-        },
-        orb3: {
-          '0%, 100%': { transform: 'translate(-50%, -50%) scale(1)' },
-          '50%': { transform: 'translate(-50%, -50%) scale(1.1)' },
-        },
+        grain: 'grain 0.5s steps(1) infinite',
+        flicker: 'flicker 8s ease-in-out infinite',
       },
     },
   },
