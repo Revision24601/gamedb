@@ -8,6 +8,7 @@ import Header from '@/components/Header';
 import StarRating from '@/components/StarRating';
 import StatusSelector from '@/components/StatusSelector';
 import { useToast } from '@/components/ToastProvider';
+import SoundtrackSection from '@/components/SoundtrackSection';
 import { FaEdit, FaTrash, FaArrowLeft, FaGamepad, FaClock, FaPlus, FaHeart, FaRegHeart } from 'react-icons/fa';
 import type { IGame } from '@/models/Game';
 
@@ -278,6 +279,12 @@ export default function GameDetailPage({ params }: { params: { id: string } }) {
               </div>
             </div>
           </div>
+
+          {/* Listening Room */}
+          <SoundtrackSection
+            gameTitle={game.title}
+            composer={(game as any).composer}
+          />
         </div>
       </div>
 

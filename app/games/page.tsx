@@ -24,6 +24,7 @@ const statusColors: Record<string, string> = {
 export default function GamesPage() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('search');
+  const composerQuery = searchParams.get('composer');
   
   const [allGames, setAllGames] = useState<IGame[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,12 +65,21 @@ export default function GamesPage() {
     return counts;
   }, [allGames]);
 
-  // Filter by status (client-side from already-fetched data)
+  // Filter by status and composer (client-side from already-fetched data)
   const filteredGames = useMemo(() => {
-    if (selectedStatus === 'All') return allGames;
-    if (selectedStatus === 'Favorites') return allGames.filter((g: any) => g.isFavorite);
-    return allGames.filter((g) => g.status === selectedStatus);
-  }, [allGames, selectedStatus]);
+    let filtered = allGames;
+
+    // Composer filter (from URL param, e.g. ?composer=Akira+Yamaoka)
+    if (composerQuery) {
+      filtered = filtered.filter((g: any) =>
+        g.composer && g.composer.toLowerCase().includes(composerQuery.toLowerCase())
+      );
+    }
+
+    if (selectedStatus === 'All') return filtered;
+    if (selectedStatus === 'Favorites') return filtered.filter((g: any) => g.isFavorite);
+    return filtered.filter((g) => g.status === selectedStatus);
+  }, [allGames, selectedStatus, composerQuery]);
 
   // Sort
   const sortedGames = useMemo(() => {
@@ -121,10 +131,14 @@ export default function GamesPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
               <FaBook className="text-primary-500" />
-              {searchQuery ? `Results: "${searchQuery}"` : 'My Collection'}
+              {composerQuery ? `Composed by ${composerQuery}` : searchQuery ? `Results: "${searchQuery}"` : 'My Collection'}
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
-              {searchQuery ? 'Games matching your search' : `${allGames.length} games in your library`}
+              {composerQuery
+                ? `${filteredGames.length} games scored by ${composerQuery}`
+                : searchQuery
+                ? 'Games matching your search'
+                : `${allGames.length} games in your library`}
             </p>
           </div>
           

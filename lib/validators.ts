@@ -40,6 +40,7 @@ export const gameCreateSchema = z.object({
   hoursPlayed: z.number().min(0).default(0),
   imageUrl: z.string().url().optional().nullable(),
   notes: z.string().max(2000, 'Notes are too long').optional().nullable(),
+  composer: z.string().max(200, 'Composer name is too long').optional().nullable(),
   isFavorite: z.boolean().optional().default(false),
 });
 

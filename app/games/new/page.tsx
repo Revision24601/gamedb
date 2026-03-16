@@ -439,6 +439,19 @@ export default function NewGame() {
         </div>
 
         <div>
+          <label htmlFor="composer" className="block text-sm font-medium mb-1">
+            Composer
+          </label>
+          <input
+            type="text"
+            id="composer"
+            className="input-field w-full"
+            placeholder="e.g. Akira Yamaoka, Shoji Meguro"
+            {...register('composer')}
+          />
+        </div>
+
+        <div>
           <label htmlFor="notes" className="block text-sm font-medium mb-1">
             Notes
           </label>

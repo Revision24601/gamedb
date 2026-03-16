@@ -48,6 +48,7 @@ export default function EditGamePage({ params }: { params: { id: string } }) {
         setValue('rating', game.rating);
         setValue('hoursPlayed', game.hoursPlayed);
         setValue('imageUrl', game.imageUrl);
+        setValue('composer', game.composer);
         setValue('notes', game.notes);
         
       } catch (err) {
@@ -259,6 +260,19 @@ export default function EditGamePage({ params }: { params: { id: string } }) {
                 />
               </div>
             )}
+          </div>
+
+          <div>
+            <label htmlFor="composer" className="block text-sm font-medium mb-1">
+              Composer
+            </label>
+            <input
+              type="text"
+              id="composer"
+              className="input-field w-full"
+              placeholder="e.g. Akira Yamaoka, Shoji Meguro"
+              {...register('composer')}
+            />
           </div>
 
           <div>

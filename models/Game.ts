@@ -9,6 +9,7 @@ export interface IGame {
   hoursPlayed: number;
   notes?: string;
   imageUrl?: string;
+  composer?: string;
   isFavorite?: boolean;
   userId?: string;
   createdAt: Date;
@@ -55,6 +56,11 @@ const gameSchema = new mongoose.Schema<IGame>(
     imageUrl: {
       type: String,
       trim: true,
+    },
+    composer: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Composer name cannot be more than 200 characters'],
     },
     isFavorite: {
       type: Boolean,
