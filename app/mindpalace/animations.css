@@ -987,7 +987,6 @@ body.page-transitioning {
     opacity: 0;
   }
 }
-
 .animate-light-sweep {
   animation: lightSweep 2.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
   animation-delay: 0.5s;

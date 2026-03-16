@@ -10,7 +10,7 @@ export interface Room {
   type: RoomType;
   description: string;
   isLocked: boolean;
-  gameId?: string; // ID of the associated game
+  gameId?: string;
 }
 
 // Shared props interface for animation configuration
@@ -30,7 +30,7 @@ export interface BaseMindPalaceProps {
   renderMode?: RenderMode;
 }
 
-// Room styling utilities
+// Room icon names (mapped in iconMapping.ts)
 export const getRoomIcon = (type: RoomType): string => {
   switch (type) {
     case 'study': return 'FaGraduationCap';
@@ -46,44 +46,35 @@ export const getRoomIcon = (type: RoomType): string => {
   }
 };
 
+// Room background — Animus theme (used for icon containers)
 export const getRoomBackground = (type: RoomType): string => {
   switch (type) {
-    case 'study': return 'from-blue-400 to-blue-600';
-    case 'library': return 'from-amber-400 to-amber-600';
-    case 'garden': return 'from-green-400 to-green-600';
-    case 'workshop': return 'from-red-400 to-red-600';
-    case 'gallery': return 'from-purple-400 to-purple-600';
-    case 'theater': return 'from-indigo-400 to-indigo-600';
-    case 'trophy': return 'from-yellow-400 to-yellow-600';
-    case 'archive': return 'from-gray-400 to-gray-600';
-    case 'locked': return 'from-gray-300 to-gray-500';
-    default: return 'from-accent to-accent/70';
+    case 'study': return 'from-cyan-500/20 to-cyan-700/20';
+    case 'library': return 'from-blue-500/20 to-blue-700/20';
+    case 'garden': return 'from-emerald-500/20 to-emerald-700/20';
+    case 'workshop': return 'from-orange-500/20 to-orange-700/20';
+    case 'gallery': return 'from-purple-500/20 to-purple-700/20';
+    case 'theater': return 'from-indigo-500/20 to-indigo-700/20';
+    case 'trophy': return 'from-yellow-500/20 to-yellow-700/20';
+    case 'archive': return 'from-slate-500/20 to-slate-700/20';
+    case 'locked': return 'from-gray-600/20 to-gray-800/20';
+    default: return 'from-gray-500/20 to-gray-700/20';
   }
 };
 
-export const getRoomPattern = (type: RoomType): string => {
-  switch (type) {
-    case 'study': return 'bg-[radial-gradient(circle_at_1rem_1rem,rgba(255,255,255,0.1)_0.5rem,transparent_0.5rem)]';
-    case 'library': return 'bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.05)_10px,rgba(255,255,255,0.05)_15px)]';
-    case 'garden': return 'bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_0.5rem,transparent_2rem)]';
-    case 'workshop': return 'bg-[repeating-linear-gradient(-45deg,transparent,transparent_10px,rgba(255,255,255,0.05)_10px,rgba(255,255,255,0.05)_20px)]';
-    case 'gallery': return 'bg-[linear-gradient(transparent_0%,rgba(255,255,255,0.05)_100%)]';
-    case 'theater': return 'bg-[repeating-linear-gradient(90deg,transparent,transparent_20px,rgba(255,255,255,0.05)_20px,rgba(255,255,255,0.05)_40px)]';
-    case 'trophy': return 'bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1)_1rem,transparent_2rem)]';
-    case 'archive': return 'bg-[repeating-linear-gradient(0deg,transparent,transparent_10px,rgba(255,255,255,0.05)_10px,rgba(255,255,255,0.05)_20px)]';
-    case 'locked': return '';
-    default: return '';
-  }
+export const getRoomPattern = (_type: RoomType): string => {
+  // Patterns removed — Animus theme uses clean geometric styling
+  return '';
 };
 
-// Game status badge color
+// Game status accent colors — Animus palette
 export const getStatusColor = (status: string): string => {
   switch (status) {
-    case 'Playing': return 'bg-blue-500';
-    case 'Completed': return 'bg-green-500';
-    case 'On Hold': return 'bg-yellow-500';
-    case 'Dropped': return 'bg-red-500';
-    case 'Plan to Play': return 'bg-purple-500';
-    default: return 'bg-gray-500';
+    case 'Playing': return '#00d4ff';      // Cyan
+    case 'Completed': return '#00ff88';    // Green
+    case 'On Hold': return '#a855f7';      // Purple
+    case 'Dropped': return '#ff4444';      // Red
+    case 'Plan to Play': return '#6366f1'; // Indigo
+    default: return '#6b7280';             // Gray
   }
-}; 
+};

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { FaGamepad, FaStar, FaLock, FaArrowRight } from 'react-icons/fa';
-import { Room, BaseMindPalaceProps, getRoomBackground, getRoomPattern, getStatusColor } from '../types';
+import React, { useState } from 'react';
+import { FaGamepad, FaStar, FaLock } from 'react-icons/fa';
+import { Room, BaseMindPalaceProps, getStatusColor } from '../types';
 import { IGame } from '@/models/Game';
-import { iconComponents } from '../utils/iconMapping';
+import { getIconComponent } from '../utils/iconMapping';
 
 interface RoomCardProps extends BaseMindPalaceProps {
   room: Room;
@@ -16,191 +16,182 @@ const RoomCard: React.FC<RoomCardProps> = ({
   game,
   onClick,
   onEnterRoom,
-  animationConfig,
-  renderMode = 'static'
 }) => {
-  // Local state for hover and click animations
   const [isHovered, setIsHovered] = useState(false);
-  const [isClicked, setIsClicked] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  
-  // Check if device is mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-    };
-  }, []);
-  
-  // Get the icon component based on room type
-  const RoomIcon = iconComponents[room.type] || iconComponents.default;
-  
-  // Get styling properties
-  const backgroundClass = getRoomBackground(room.type);
-  const patternClass = getRoomPattern(room.type);
-  
-  // Get container classes based on render mode and states
-  const getContainerClasses = () => {
-    const baseClasses = `relative aspect-square cursor-pointer transition-all duration-300 
-      ${room.isLocked ? 'opacity-70 grayscale' : ''} 
-      ${game ? 'group' : ''}
-      ${isClicked ? 'animate-roomCardExit' : ''}
-      bg-amber-50/70 dark:bg-amber-900/70 backdrop-blur-sm
-      rounded-xl overflow-hidden
-      border border-amber-800/20 dark:border-amber-200/20
-      shadow-md hover:shadow-lg`;
-    
-    switch (renderMode) {
-      case 'static':
-        return baseClasses;
-      case '2d-animated':
-        return `${baseClasses} animate-fadeIn`;
-      case 'webgl':
-        return `${baseClasses} webgl-room`;
-      default:
-        return baseClasses;
-    }
-  };
-  
-  // Handle room click with animation
-  const handleClick = () => {
-    if (!room.isLocked && game) {
-      setIsClicked(true);
-      
-      // Add a slight delay before executing the actual onClick handler
-      setTimeout(() => {
-        onClick();
-      }, 150);
-    } else {
-      onClick();
-    }
-  };
-  
-  // Handle keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Enter or space key activates the card
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleClick();
-    }
-  };
-  
-  // Handle direct enter room button click
+  const RoomIcon = getIconComponent(room.type);
+  const statusAccent = game ? getStatusColor(game.status) : '#6b7280';
+
   const handleEnterRoom = (e: React.MouseEvent) => {
-    if (game && game._id) {
-      setIsClicked(true);
-      onEnterRoom(e, game._id);
-    }
+    e.stopPropagation();
+    if (game && game._id) onEnterRoom(e, game._id);
   };
-  
-  // Handle mobile tap events
-  const handleMobileTap = (e: React.TouchEvent) => {
-    if (isMobile && game && !showTooltip) {
-      e.preventDefault();
-      setShowTooltip(true);
-      // Prevent immediate click through
-      return false;
-    }
-    return true;
-  };
+
+  // Rating as percentage for the ring
+  const ratingPercent = game && game.rating > 0 ? (game.rating / 10) * 100 : 0;
+  const circumference = 2 * Math.PI * 38; // radius = 38
+  const strokeDashoffset = circumference - (ratingPercent / 100) * circumference;
+
+  if (room.isLocked) {
+    return (
+      <div className="memory-node opacity-50 flex items-center justify-center" onClick={onClick}>
+        <div className="memory-node-corner tl" />
+        <div className="memory-node-corner tr" />
+        <div className="memory-node-corner bl" />
+        <div className="memory-node-corner br" />
+        <div className="flex flex-col items-center gap-2 text-gray-600">
+          <FaLock className="text-lg" />
+          <span className="text-[10px] font-mono tracking-wider uppercase">{room.name}</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
-      className={getContainerClasses()}
-      onClick={handleClick}
+      className="memory-node"
+      onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setIsHovered(false);
-        if (!isMobile) setShowTooltip(false);
-      }}
-      onTouchStart={handleMobileTap}
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
+      onMouseLeave={() => setIsHovered(false)}
       role="button"
-      aria-label={`${room.name} room${game ? ` containing ${game.title}` : ''}`}
+      tabIndex={0}
+      aria-label={`${room.name}${game ? ` — ${game.title}` : ''}`}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
     >
-      {/* Parchment texture overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-10 bg-repeat bg-[url('data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5z\' fill=\'%236b5237\' fill-opacity=\'1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E')]"></div>
-      
-      {/* Room Card with Border Glow Effect */}
-      <div className={`absolute inset-1 rounded-xl bg-gradient-to-br ${backgroundClass} opacity-40 blur-md transition-opacity ${!room.isLocked && isHovered ? 'opacity-70' : ''}`}></div>
-      
-      {/* Room Card Main Content */}
-      <div className="relative flex flex-col items-center justify-between h-full p-4 z-10">
-        <div className="flex flex-col items-center mb-2 z-10">
-          {/* Room Icon */}
-          <div className={`w-14 h-14 rounded-xl backdrop-blur-md bg-gradient-to-br ${backgroundClass} flex items-center justify-center text-white mb-3 
-            shadow-lg shadow-black/20 transition-transform duration-300 ${!room.isLocked && isHovered ? 'scale-110' : ''}`}>
-            <RoomIcon className="text-2xl" />
-          </div>
-          
-          {/* Room Name */}
-          <h2 className="text-lg font-medium text-center drop-shadow text-amber-900 dark:text-amber-100">{room.name}</h2>
-          
-          {/* Room Type */}
-          <div className="text-xs text-amber-700 dark:text-amber-300 mb-3 opacity-80">
-            {room.type !== 'locked' ? room.type : '???'}
-          </div>
-        </div>
-        
-        {/* Game Info (if a game is assigned) */}
-        {game && (
-          <div className="w-full mt-auto">
-            <div className="relative">
-              {/* Game title with separator */}
-              <div className="text-center mb-2">
-                <div className="h-px w-10 bg-amber-700/30 mx-auto mb-2"></div>
-                <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200 line-clamp-1">
-                  {game.title}
-                </h3>
+      {/* Corner decorations */}
+      <div className="memory-node-corner tl" style={{ borderColor: `${statusAccent}44` }} />
+      <div className="memory-node-corner tr" style={{ borderColor: `${statusAccent}44` }} />
+      <div className="memory-node-corner bl" style={{ borderColor: `${statusAccent}44` }} />
+      <div className="memory-node-corner br" style={{ borderColor: `${statusAccent}44` }} />
+
+      {/* Content */}
+      <div className="relative flex flex-col items-center justify-center h-full p-3 z-10">
+        {game ? (
+          <>
+            {/* Game image with rating ring */}
+            <div className="relative mb-2">
+              <div className="w-[84px] h-[84px] rounded-full overflow-hidden border border-gray-700/50 relative">
+                {game.imageUrl ? (
+                  <img
+                    src={game.imageUrl}
+                    alt={game.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                    <FaGamepad className="text-gray-600 text-xl" />
+                  </div>
+                )}
               </div>
-              
-              {/* Platform Badge */}
-              <div className="flex justify-center mt-1">
-                <span className="inline-block px-2 py-0.5 text-2xs bg-amber-100 dark:bg-amber-800 
-                  text-amber-800 dark:text-amber-100 rounded-full text-center">
-                  {game.platform || 'Unknown Platform'}
-                </span>
-              </div>
-              
-              {/* "Enter Room" Action Button - Shows on Hover */}
-              <div className={`absolute inset-x-0 bottom-0 transform transition-all duration-300 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 ${showTooltip ? 'opacity-100 translate-y-0' : ''}`}>
-                <button
-                  className="w-full py-1.5 px-3 mt-2 bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-100 
-                    rounded-lg flex items-center justify-center gap-1 text-xs font-medium shadow-sm 
-                    hover:bg-amber-700 hover:text-amber-50 dark:hover:bg-amber-600 dark:hover:text-amber-50
-                    transition-colors"
-                  onClick={handleEnterRoom}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                  Enter Room
-                </button>
-              </div>
+
+              {/* Rating ring overlay */}
+              {ratingPercent > 0 && (
+                <svg className="absolute inset-0 w-[84px] h-[84px]" viewBox="0 0 84 84" style={{ transform: 'rotate(-90deg)' }}>
+                  {/* Background ring */}
+                  <circle cx="42" cy="42" r="38" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
+                  {/* Rating ring */}
+                  <circle
+                    cx="42" cy="42" r="38"
+                    fill="none"
+                    stroke={statusAccent}
+                    strokeWidth="2"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    strokeLinecap="round"
+                    className="transition-all duration-500"
+                    style={{ filter: `drop-shadow(0 0 4px ${statusAccent})` }}
+                  />
+                </svg>
+              )}
+
+              {/* Status dot */}
+              <div
+                className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full status-pulse border border-black"
+                style={{ backgroundColor: statusAccent, boxShadow: `0 0 6px ${statusAccent}` }}
+              />
             </div>
-          </div>
-        )}
-        
-        {/* Locked Room Overlay */}
-        {room.isLocked && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-amber-900/20 backdrop-blur-sm rounded-xl">
-            <FaLock className="text-2xl text-amber-700 dark:text-amber-300 mb-2" />
-            <p className="text-sm text-amber-800 dark:text-amber-200 text-center px-4">
-              This room is currently locked
-            </p>
-          </div>
+
+            {/* Game title */}
+            <h3 className="text-[11px] font-mono text-gray-200 text-center line-clamp-2 leading-tight mb-1">
+              {game.title}
+            </h3>
+
+            {/* Platform + rating */}
+            <div className="flex items-center gap-2 text-[9px] font-mono text-gray-500">
+              {game.rating > 0 && (
+                <span className="flex items-center gap-0.5">
+                  <FaStar className="text-yellow-500" style={{ fontSize: '8px' }} />
+                  {game.rating}
+                </span>
+              )}
+              {game.hoursPlayed > 0 && (
+                <span>{game.hoursPlayed}h</span>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Room type icon (no game assigned) */}
+            <div className="w-10 h-10 rounded-lg bg-gray-800/50 border border-gray-700/30 flex items-center justify-center mb-2">
+              <RoomIcon className="text-gray-500 text-sm" />
+            </div>
+            <span className="text-[10px] font-mono text-gray-600 tracking-wider">{room.name}</span>
+          </>
         )}
       </div>
+
+      {/* Hover HUD tooltip */}
+      {isHovered && game && (
+        <div
+          className="absolute z-30 w-56 p-4 rounded-lg animate-fadeIn pointer-events-none"
+          style={{
+            top: '105%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(6, 10, 18, 0.95)',
+            border: '1px solid rgba(0, 212, 255, 0.2)',
+            boxShadow: '0 0 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 212, 255, 0.1)',
+          }}
+        >
+          <div className="hud-corner tl" />
+          <div className="hud-corner tr" />
+          <div className="hud-corner bl" />
+          <div className="hud-corner br" />
+
+          <h4 className="text-sm text-gray-100 font-medium mb-2">{game.title}</h4>
+
+          <div className="flex items-center gap-2 mb-2">
+            <span
+              className="text-[10px] px-2 py-0.5 rounded font-mono text-white"
+              style={{ backgroundColor: statusAccent }}
+            >
+              {game.status}
+            </span>
+            {game.rating > 0 && (
+              <span className="text-[10px] font-mono text-gray-400 flex items-center gap-0.5">
+                <FaStar className="text-yellow-500" style={{ fontSize: '9px' }} />
+                {game.rating}/10
+              </span>
+            )}
+          </div>
+
+          <div className="text-[10px] font-mono text-gray-500 space-y-1">
+            <p>{game.platform}</p>
+            {game.hoursPlayed > 0 && <p>{game.hoursPlayed} hours played</p>}
+          </div>
+
+          {game.notes && (
+            <p className="text-[10px] text-gray-400 mt-2 italic line-clamp-2 border-t border-gray-700/50 pt-2">
+              {game.notes}
+            </p>
+          )}
+
+          <p className="text-[9px] text-cyan-500/60 mt-2 text-center font-mono tracking-wider">
+            CLICK TO FOCUS
+          </p>
+        </div>
+      )}
     </div>
   );
 };
 
-export default RoomCard; 
+export default RoomCard;

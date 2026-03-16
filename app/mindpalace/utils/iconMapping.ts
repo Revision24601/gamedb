@@ -7,10 +7,7 @@ import {
   FaFilm, 
   FaTrophy, 
   FaArchive, 
-  FaQuestion,
-  FaGem,
-  FaCog,
-  FaGamepad
+  FaQuestion
 } from 'react-icons/fa';
 import { RoomType } from '../types';
 

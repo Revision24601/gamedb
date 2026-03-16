@@ -3,11 +3,13 @@ import Link from 'next/link';
 import { FaGamepad, FaStar, FaList, FaPlus } from 'react-icons/fa';
 import GameList from '@/components/GameList';
 import NowPlayingShelf from '@/components/NowPlayingShelf';
+import MigrationBanner from '@/components/MigrationBanner';
 
 export default function Home() {
   return (
     <main>
       <Header />
+      <MigrationBanner />
       
       <div className="bg-gradient-to-b from-primary-600 to-primary-800 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

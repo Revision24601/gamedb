@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/dbConnect';
 import Game from '@/models/Game';
 import { gameCreateSchema, gameSearchSchema } from '@/lib/validators';
 
 export async function GET(request: NextRequest) {
   try {
-    // Establish MongoDB connection
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await dbConnect();
 
     // Parse query parameters
@@ -29,8 +35,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Build the query
-    const query: any = {};
+    // Build the query — scoped to the authenticated user
+    const query: any = { userId: session.user.id };
     if (queryParams.search) {
       query.$or = [
         { title: { $regex: queryParams.search, $options: 'i' } },
@@ -86,7 +92,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Establish MongoDB connection
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await dbConnect();
 
     // Parse and validate the request body
@@ -100,15 +110,14 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Create the game with validated data
-    const gameData = validationResult.data;
+    // Create the game with validated data + userId
+    const gameData = { ...validationResult.data, userId: session.user.id };
     const game = await Game.create(gameData);
     
     return NextResponse.json(game, { status: 201 });
   } catch (error: any) {
     console.error('Failed to create game:', error);
     
-    // Return a more specific error message
     const errorMessage = error.code === 11000 
       ? 'A game with this title already exists.'
       : error.message || 'Failed to create game. Please try again later.';
@@ -118,4 +127,4 @@ export async function POST(request: NextRequest) {
       { status: error.code === 11000 ? 409 : 500 }
     );
   }
-} 
+}

@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FaGamepad, FaStar, FaArrowRight } from 'react-icons/fa';
-import { Room, BaseMindPalaceProps, getRoomBackground } from '../types';
+import { FaGamepad, FaStar, FaArrowRight, FaClock } from 'react-icons/fa';
+import { Room, BaseMindPalaceProps, getStatusColor } from '../types';
 import { IGame } from '@/models/Game';
-import { iconComponents } from '../utils/iconMapping';
+import { getIconComponent } from '../utils/iconMapping';
 
 interface RoomDetailModalProps extends BaseMindPalaceProps {
   room: Room;
@@ -12,353 +12,226 @@ interface RoomDetailModalProps extends BaseMindPalaceProps {
   onEnterRoom: (gameId: string) => void;
 }
 
-// Helper for rendering star ratings
-const renderRatingStars = (rating: number) => {
-  const stars = [];
-  const fullStars = Math.floor(rating / 2);
-  const hasHalfStar = rating % 2 >= 1;
-  
-  for (let i = 0; i < 5; i++) {
-    if (i < fullStars) {
-      stars.push(<FaStar key={i} className="text-yellow-500" />);
-    } else if (i === fullStars && hasHalfStar) {
-      stars.push(<FaStar key={i} className="text-yellow-500 opacity-50" />);
-    } else {
-      stars.push(<FaStar key={i} className="text-gray-300" />);
-    }
-  }
-  
-  return (
-    <div className="flex space-x-1">
-      {stars}
-      <span className="ml-2 text-sm font-medium">{rating}/10</span>
-    </div>
-  );
-};
-
-// Get status badge color
-const getStatusColor = (status: string): string => {
-  switch (status) {
-    case 'Playing': return 'bg-blue-500';
-    case 'Completed': return 'bg-green-500';
-    case 'On Hold': return 'bg-yellow-500';
-    case 'Dropped': return 'bg-red-500';
-    case 'Plan to Play': return 'bg-purple-500';
-    default: return 'bg-gray-500';
-  }
-};
-
 const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
   room,
   game,
   isOpen,
   onClose,
   onEnterRoom,
-  animationConfig,
-  renderMode = 'static'
 }) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
-  
-  // Refs for focus management
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const enterRoomButtonRef = useRef<HTMLButtonElement>(null);
-  
-  // Handle ESC key press
+
+  const RoomIcon = getIconComponent(room.type);
+  const statusAccent = game ? getStatusColor(game.status) : '#6b7280';
+
+  // ESC to close + focus management
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
     };
-    
-    // Focus the modal when it opens
-    if (isOpen && closeButtonRef.current) {
-      closeButtonRef.current.focus();
-    }
-    
+    if (isOpen && closeButtonRef.current) closeButtonRef.current.focus();
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
-  
-  // Handle focus trapping
+
+  // Focus trap
   useEffect(() => {
-    const handleTabKey = (e: KeyboardEvent) => {
+    const handleTab = (e: KeyboardEvent) => {
       if (e.key === 'Tab' && modalRef.current) {
-        // Get all focusable elements
-        const focusableElements = modalRef.current.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        
-        if (focusableElements.length === 0) return;
-        
-        const firstElement = focusableElements[0] as HTMLElement;
-        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-        
-        // If shift + tab and on first element, move to last element
-        if (e.shiftKey && document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
-        } 
-        // If tab and on last element, move to first element
-        else if (!e.shiftKey && document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
-        }
+        const focusable = modalRef.current.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length === 0) return;
+        const first = focusable[0] as HTMLElement;
+        const last = focusable[focusable.length - 1] as HTMLElement;
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     };
-    
-    window.addEventListener('keydown', handleTabKey);
-    return () => window.removeEventListener('keydown', handleTabKey);
+    window.addEventListener('keydown', handleTab);
+    return () => window.removeEventListener('keydown', handleTab);
   }, []);
 
-  // Handle enter room click with transition animation
   const handleEnterRoom = () => {
     if (game?._id) {
       setIsTransitioning(true);
       setTimeout(() => {
         onEnterRoom(game._id as string);
         setIsTransitioning(false);
-      }, 500);
+      }, 600);
     }
   };
 
-  // Get the icon component for the room type
-  const RoomIcon = iconComponents[room.type] || iconComponents.default;
-  
-  // Get container classes based on render mode and transition state
-  const getContainerClasses = () => {
-    const baseClasses = `fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50`;
-    const transitionClasses = isTransitioning ? 'animate-modalFadeOut' : 'animate-modalFadeIn';
-    
-    switch (renderMode) {
-      case 'static':
-        return `${baseClasses} ${transitionClasses}`;
-      case '2d-animated':
-        return `${baseClasses} ${transitionClasses}`;
-      case 'webgl':
-        return `${baseClasses} webgl-modal-backdrop ${transitionClasses}`;
-      default:
-        return `${baseClasses} ${transitionClasses}`;
+  // Rating stars
+  const renderRating = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= 10; i++) {
+      stars.push(
+        <div
+          key={i}
+          className={`w-2.5 h-2.5 rounded-sm ${i <= rating ? 'bg-yellow-500' : 'bg-gray-700'}`}
+          style={i <= rating ? { boxShadow: '0 0 4px rgba(234, 179, 8, 0.4)' } : {}}
+        />
+      );
     }
+    return <div className="flex gap-0.5">{stars}</div>;
   };
-  
-  // Get modal panel classes
-  const getModalClasses = () => {
-    const baseClasses = `max-w-lg w-full m-4 transition-all duration-500 
-    relative overflow-hidden rounded-2xl border-2 border-white/20 bg-white/90 dark:bg-gray-800/90 p-8 backdrop-blur-sm shadow-2xl`;
-    
-    const transitionClasses = isTransitioning 
-      ? 'animate-modalContentExit' 
-      : 'animate-zoomIn';
-    
-    switch (renderMode) {
-      case 'static':
-        return `${baseClasses} ${transitionClasses}`;
-      case '2d-animated':
-        return `${baseClasses} ${transitionClasses}`;
-      case 'webgl':
-        return `${baseClasses} webgl-modal ${transitionClasses}`;
-      default:
-        return `${baseClasses} ${transitionClasses}`;
-    }
-  };
-  
-  // For future WebGL/Canvas implementation
-  const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  
-  React.useEffect(() => {
-    // Only initialize canvas if in webGL mode
-    if (renderMode === 'webgl' && canvasRef.current) {
-      // WebGL initialization would go here
-      // This is just a placeholder for future implementation
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      
-      if (context) {
-        // Basic canvas setup - would be replaced with WebGL in the future
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.fillStyle = 'rgba(0, 0, 0, 0.1)';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-      }
-    }
-  }, [renderMode]);
 
-  // Get appropriate modal container classes
-  const getModalContainerClasses = () => {
-    const baseClasses = `fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm animate-modalFadeIn`;
-    const transitionClasses = isTransitioning ? 'animate-modalFadeOut' : 'animate-modalFadeIn';
-    
-    switch (renderMode) {
-      case 'static':
-        return `${baseClasses} ${transitionClasses}`;
-      case '2d-animated':
-        return `${baseClasses} ${transitionClasses}`;
-      case 'webgl':
-        return `${baseClasses} webgl-modal-backdrop ${transitionClasses}`;
-      default:
-        return `${baseClasses} ${transitionClasses}`;
-    }
-  };
-  
   if (!isOpen) return null;
-  
+
   return (
-    <div 
-      className={getModalContainerClasses()}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center animus-modal-backdrop"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="modal-title"
     >
-      {/* WebGL canvas - hidden in static mode */}
-      {renderMode === 'webgl' && (
-        <canvas 
-          ref={canvasRef}
-          className="absolute inset-0 -z-10 opacity-0"
-          width="1000"
-          height="1000"
-        />
-      )}
-      
-      <div 
-        className={getModalClasses()}
+      <div
+        className={`animus-modal max-w-lg w-full m-4 p-8 ${isTransitioning ? 'animus-modal-exit' : ''}`}
         onClick={(e) => e.stopPropagation()}
         ref={modalRef}
       >
-        {/* Close Button */}
-        <button 
-          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-gray-300/50 dark:bg-gray-700/50 flex items-center justify-center hover:bg-accent hover:text-white transition-colors text-gray-700 dark:text-gray-300"
+        {/* HUD corners */}
+        <div className="hud-corner tl" />
+        <div className="hud-corner tr" />
+        <div className="hud-corner bl" />
+        <div className="hud-corner br" />
+
+        {/* Close button */}
+        <button
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded flex items-center justify-center text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10 border border-transparent hover:border-cyan-500/20 transition-all font-mono text-sm"
           onClick={onClose}
-          aria-label="Close modal"
           ref={closeButtonRef}
+          aria-label="Close"
         >
           ×
         </button>
-        
-        {/* Decorative corners */}
-        <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-accent/30 rounded-tl-xl"></div>
-        <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-accent/30 rounded-tr-xl"></div>
-        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-accent/30 rounded-bl-xl"></div>
-        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-accent/30 rounded-br-xl"></div>
-          
-        <div className="flex items-center mb-6">
-          <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${getRoomBackground(room.type)} flex items-center justify-center text-white mr-4 shadow-lg`}>
-            <RoomIcon className="text-2xl" />
+
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6 relative z-10">
+          <div
+            className="w-12 h-12 rounded-lg flex items-center justify-center"
+            style={{
+              background: `${statusAccent}15`,
+              border: `1px solid ${statusAccent}33`,
+              color: statusAccent,
+            }}
+          >
+            <RoomIcon className="text-xl" />
           </div>
-          <h2 className="journal-section m-0">{room.name}</h2>
+          <div>
+            <h2 className="text-lg font-medium text-gray-100">{room.name}</h2>
+            <p className="text-xs font-mono text-gray-500 tracking-wider uppercase">{room.type}</p>
+          </div>
         </div>
-        
-        <p className="journal-text mb-6">{room.description}</p>
-        
-        {/* Game Display */}
+
+        <p className="text-sm text-gray-400 mb-6 relative z-10">{room.description}</p>
+
+        {/* Game display */}
         {game && (
-          <div className="mb-6 bg-white/70 dark:bg-gray-900/70 rounded-xl shadow-md relative overflow-hidden border border-white/20 backdrop-blur-sm">
+          <div
+            className="mb-6 rounded-lg overflow-hidden relative z-10"
+            style={{
+              background: 'rgba(0, 0, 0, 0.4)',
+              border: '1px solid rgba(255,255,255,0.05)',
+            }}
+          >
             <div className="p-5">
-              <h3 className="text-lg font-semibold mb-4 pl-2 border-l-4 border-accent">Featured Game</h3>
-              
-              <div className="flex items-start">
-                {/* Game Image */}
-                <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-lg mr-4 flex items-center justify-center overflow-hidden shadow-md border-2 border-white/10">
+              {/* Section label */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-1 h-4 rounded-full" style={{ backgroundColor: statusAccent }} />
+                <span className="text-xs font-mono text-gray-400 tracking-wider uppercase">Memory Data</span>
+              </div>
+
+              <div className="flex items-start gap-4">
+                {/* Game image */}
+                <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-gray-700/50">
                   {game.imageUrl ? (
-                    <img 
-                      src={game.imageUrl} 
-                      alt={game.title}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={game.imageUrl} alt={game.title} className="w-full h-full object-cover" />
                   ) : (
-                    <FaGamepad className="text-gray-400 dark:text-gray-500 text-3xl" />
-                  )}
-                </div>
-                
-                {/* Game Details */}
-                <div className="flex-1">
-                  <h4 className="font-medium text-lg text-gray-900 dark:text-white">{game.title}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Platform: {game.platform}
-                  </p>
-                  <div className="flex items-center mt-2">
-                    <span className={`inline-block px-3 py-1 text-xs rounded-full text-white ${getStatusColor(game.status)} shadow-sm`}>
-                      {game.status}
-                    </span>
-                  </div>
-                  
-                  {game.rating > 0 && (
-                    <div className="mt-2 flex items-center">
-                      {renderRatingStars(game.rating)}
+                    <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                      <FaGamepad className="text-gray-600 text-2xl" />
                     </div>
                   )}
-                  
-                  {game.hoursPlayed > 0 && (
-                    <p className="text-sm mt-2 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded inline-block">
-                      {game.hoursPlayed} {game.hoursPlayed === 1 ? 'hour' : 'hours'} played
-                    </p>
+                </div>
+
+                {/* Game details */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-base font-medium text-gray-100 mb-1">{game.title}</h4>
+                  <p className="text-xs font-mono text-gray-500 mb-2">{game.platform}</p>
+
+                  <div className="flex items-center gap-3 mb-2">
+                    <span
+                      className="text-[10px] px-2 py-0.5 rounded font-mono text-white"
+                      style={{ backgroundColor: statusAccent }}
+                    >
+                      {game.status}
+                    </span>
+                    {game.hoursPlayed > 0 && (
+                      <span className="text-[10px] font-mono text-gray-500 flex items-center gap-1">
+                        <FaClock style={{ fontSize: '9px' }} />
+                        {game.hoursPlayed}h
+                      </span>
+                    )}
+                  </div>
+
+                  {game.rating > 0 && (
+                    <div className="flex items-center gap-2">
+                      {renderRating(game.rating)}
+                      <span className="text-xs font-mono text-gray-500">{game.rating}/10</span>
+                    </div>
                   )}
                 </div>
               </div>
-              
-              {/* Game Notes */}
+
+              {/* Notes */}
               {game.notes && (
-                <div className="mt-5 bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h5 className="text-sm font-medium mb-2 text-gray-900 dark:text-white flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                    Your Notes:
-                  </h5>
-                  <p className="text-sm bg-white dark:bg-gray-900 p-3 rounded border border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300 font-light italic">
-                    {game.notes}
-                  </p>
+                <div className="mt-4 pt-4 border-t border-gray-700/30">
+                  <p className="text-xs font-mono text-gray-500 mb-1 tracking-wider uppercase">Notes</p>
+                  <p className="text-sm text-gray-400 italic leading-relaxed">{game.notes}</p>
                 </div>
               )}
             </div>
-            
-            {/* Entering Room Message - with enhanced animation */}
+
+            {/* Memory loading overlay */}
             {isTransitioning && (
-              <div className="absolute inset-0 bg-accent/90 flex flex-col items-center justify-center text-white animate-fadeIn">
-                <div className="animate-pulse text-2xl mb-2">Entering Room...</div>
-                <div className="text-sm animate-slideUp">Traveling to {game.title}</div>
+              <div className="memory-loading-overlay">
+                <div className="w-8 h-8 border-2 border-cyan-500/50 border-t-cyan-400 rounded-full animate-spin mb-3" />
+                <span className="text-xs font-mono text-cyan-400 tracking-widest uppercase">
+                  Entering Memory...
+                </span>
               </div>
             )}
           </div>
         )}
-        
-        <div className="bg-white/50 dark:bg-gray-700/50 p-5 rounded-xl mb-6 border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-sm">
-          <h3 className="font-semibold mb-2 text-gray-900 dark:text-white flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            Future Functionality
-          </h3>
-          <p className="text-sm italic text-gray-700 dark:text-gray-300">
-            In the full version, this room will contain:
-          </p>
-          <ul className="list-disc pl-5 mt-2 text-sm space-y-1 text-gray-700 dark:text-gray-300">
-            <li>Interactive 3D space to organize game memories</li>
-            <li>Notes and reflection tools specific to this room's purpose</li>
-            <li>Visual connections to related games in your collection</li>
-            <li>Custom organization system for your thoughts</li>
-          </ul>
-        </div>
-        
-        <div className="flex justify-end">
-          {game ? (
-            <button 
-              className="mt-4 px-4 py-2 bg-accent text-white rounded-lg flex items-center justify-center hover:bg-accent/90 transition-colors"
+
+        {/* Action buttons */}
+        <div className="flex justify-end gap-3 relative z-10">
+          <button
+            className="px-4 py-2 text-xs font-mono text-gray-400 border border-gray-700 rounded hover:bg-gray-800 transition-colors"
+            onClick={onClose}
+          >
+            Close
+          </button>
+          {game && (
+            <button
+              className="px-4 py-2 text-xs font-mono rounded flex items-center gap-2 transition-all"
+              style={{
+                color: statusAccent,
+                border: `1px solid ${statusAccent}44`,
+                background: `${statusAccent}11`,
+              }}
               onClick={handleEnterRoom}
-              ref={enterRoomButtonRef}
-            >
-              Enter Room <FaArrowRight className="ml-2" />
-            </button>
-          ) : (
-            <button 
-              className="px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg shadow-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all"
-              onClick={(e) => {
-                e.stopPropagation();
-                onClose();
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = `${statusAccent}22`;
+                e.currentTarget.style.boxShadow = `0 0 15px ${statusAccent}22`;
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = `${statusAccent}11`;
+                e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              Close
+              Enter Memory <FaArrowRight style={{ fontSize: '10px' }} />
             </button>
           )}
         </div>
@@ -367,4 +240,4 @@ const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
   );
 };
 
-export default RoomDetailModal; 
+export default RoomDetailModal;
