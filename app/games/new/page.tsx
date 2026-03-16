@@ -4,11 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
-import { FaStar, FaArrowLeft, FaSearch } from 'react-icons/fa';
+import { FaStar, FaArrowLeft, FaSearch, FaCheck, FaGamepad } from 'react-icons/fa';
 import type { IGame } from '@/models/Game';
 import { searchGames, RawgGame, formatGameData } from '@/lib/gameApi';
 import Image from 'next/image';
 import { gamePlatformEnum, gameStatusEnum } from '@/lib/validators';
+import { useToast } from '@/components/ToastProvider';
 
 type GameFormData = Omit<IGame, 'createdAt' | 'updatedAt' | '_id'>;
 
@@ -20,7 +21,10 @@ const platformOptions = Object.values(gamePlatformEnum.enum);
 export default function NewGame() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { showToast } = useToast();
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [addedTitle, setAddedTitle] = useState('');
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<GameFormData>();
 
   // Pre-fill form from URL query params (from SearchBar quick-add)
@@ -155,7 +159,6 @@ export default function NewGame() {
     try {
       setSubmitting(true);
       
-      // Set default values for rating and hoursPlayed when status is 'Plan to Play'
       if (data.status === 'Plan to Play') {
         data.rating = 0;
         data.hoursPlayed = 0;
@@ -163,9 +166,7 @@ export default function NewGame() {
       
       const response = await fetch('/api/games', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
@@ -174,21 +175,71 @@ export default function NewGame() {
         throw new Error(errorData.error || 'Failed to add game');
       }
 
-      router.push('/');
-      router.refresh();
+      // Show success animation
+      setAddedTitle(data.title);
+      setShowSuccess(true);
+      showToast(`${data.title} added to your collection!`, 'success');
+
+      // Navigate after a brief celebration
+      setTimeout(() => {
+        router.push('/');
+        router.refresh();
+      }, 1800);
     } catch (error) {
       console.error('Error adding game:', error);
-      alert(error instanceof Error ? error.message : 'Failed to add game. Please try again.');
+      showToast(error instanceof Error ? error.message : 'Failed to add game', 'error');
     } finally {
       setSubmitting(false);
     }
   };
 
+  // Success overlay
+  if (showSuccess) {
+    return (
+      <div className="max-w-2xl mx-auto py-20">
+        <div className="flex flex-col items-center justify-center text-center">
+          {/* Animated checkmark */}
+          <div className="relative mb-6">
+            <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center animate-[scaleIn_0.4s_ease-out]">
+              <FaCheck className="text-3xl text-emerald-500 animate-[fadeIn_0.3s_ease-out_0.2s_both]" />
+            </div>
+            {/* Expanding ring */}
+            <div className="absolute inset-0 w-20 h-20 rounded-full border-2 border-emerald-400/50 animate-ping" />
+          </div>
+
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 animate-[fadeIn_0.3s_ease-out_0.3s_both]">
+            Added to Collection!
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 animate-[fadeIn_0.3s_ease-out_0.5s_both]">
+            {addedTitle}
+          </p>
+
+          {/* Game icon bouncing */}
+          <div className="mt-8 animate-bounce">
+            <FaGamepad className="text-4xl text-primary-400" />
+          </div>
+        </div>
+
+        <style jsx>{`
+          @keyframes scaleIn {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <Link href="/" className="flex items-center gap-2 text-accent hover:opacity-80">
-          <FaArrowLeft /> Back to Games
+        <Link href="/" className="flex items-center gap-2 nav-link text-sm">
+          <FaArrowLeft className="text-xs" /> Back to Games
         </Link>
       </div>
 
