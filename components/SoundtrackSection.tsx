@@ -42,7 +42,7 @@ export default function SoundtrackSection({ gameTitle, composer }: SoundtrackSec
     tracks: Track[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const [showAllTracks, setShowAllTracks] = useState(false);
   const [selectedResult, setSelectedResult] = useState<SpotifyResult | null>(null);
 
