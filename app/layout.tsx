@@ -1,12 +1,16 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter, Caveat } from 'next/font/google';
+import { Raleway, Caveat } from 'next/font/google';
 import { Suspense } from 'react';
 import { Providers } from './providers';
 import NavigationProgress from '@/components/NavigationProgress';
 import BackgroundAnimation from '@/components/BackgroundAnimation';
 
-const inter = Inter({ subsets: ['latin'] });
+const raleway = Raleway({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+});
 const caveat = Caveat({ 
   subsets: ['latin'],
   variable: '--font-caveat',
@@ -25,7 +29,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} ${caveat.variable} bg-surface-light dark:bg-surface-dark text-gray-900 dark:text-white`}>
+      <body className={`${raleway.className} ${caveat.variable} font-light bg-surface-light dark:bg-surface-dark text-gray-900 dark:text-white`}>
         <Providers>
           <BackgroundAnimation />
           <Suspense fallback={null}>
@@ -36,4 +40,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-} 
+}

@@ -44,6 +44,31 @@ module.exports = {
       animation: {
         grain: 'grain 0.5s steps(1) infinite',
         flicker: 'flicker 8s ease-in-out infinite',
+        fogDrift1: 'fogDrift 45s linear infinite',
+        fogDrift2: 'fogDrift 55s linear infinite reverse',
+        fogDrift3: 'fogDrift 40s linear infinite',
+        fogDrift4: 'fogDrift 50s linear infinite reverse',
+      },
+      keyframes: {
+        fogDrift: {
+          '0%': { transform: 'translateX(-50%)' },
+          '100%': { transform: 'translateX(0%)' },
+        },
+        grain: {
+          '0%, 100%': { transform: 'translate(0, 0)' },
+          '10%': { transform: 'translate(-1%, -1%)' },
+          '30%': { transform: 'translate(1%, 0%)' },
+          '50%': { transform: 'translate(-1%, 1%)' },
+          '70%': { transform: 'translate(1%, -1%)' },
+          '90%': { transform: 'translate(0%, 1%)' },
+        },
+        flicker: {
+          '0%, 97%, 100%': { opacity: '0' },
+          '97.5%': { opacity: '1' },
+          '98%': { opacity: '0' },
+          '98.5%': { opacity: '0.5' },
+          '99%': { opacity: '0' },
+        },
       },
     },
   },
