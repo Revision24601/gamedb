@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FaMusic, FaSpotify, FaApple, FaYoutube, FaExternalLinkAlt, FaCompactDisc, FaUser } from 'react-icons/fa';
+import { FaMusic, FaSpotify, FaApple, FaYoutube, FaExternalLinkAlt, FaCompactDisc, FaUser, FaGlobeAmericas } from 'react-icons/fa';
+import { useMusic } from './MusicProvider';
 
 interface SpotifyResult {
   type: 'album' | 'playlist';
@@ -36,6 +37,7 @@ function formatDuration(ms: number): string {
 }
 
 export default function SoundtrackSection({ gameTitle, composer }: SoundtrackSectionProps) {
+  const { playTrack } = useMusic();
   const [spotifyData, setSpotifyData] = useState<{
     bestMatch: SpotifyResult | null;
     results: SpotifyResult[];
@@ -155,16 +157,33 @@ export default function SoundtrackSection({ gameTitle, composer }: SoundtrackSec
                 />
               </div>
 
-              {/* Direct Spotify link — clear play action */}
-              <a
-                href={active.spotifyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-3 px-6 py-3 rounded-xl bg-[#1DB954] hover:bg-[#1ed760] text-white font-medium transition-colors mt-3"
-              >
-                <FaSpotify className="text-xl" />
-                Play on Spotify
-              </a>
+              {/* Action buttons */}
+              <div className="flex gap-3 mt-3">
+                {/* Play Globally — sends to persistent mini-player */}
+                <button
+                  onClick={() => playTrack({
+                    embedUrl: active.embedUrl,
+                    name: active.name,
+                    artist: active.artist,
+                    imageUrl: active.imageSmall || active.imageUrl || undefined,
+                  })}
+                  className="flex-1 flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium transition-colors"
+                >
+                  <FaGlobeAmericas className="text-sm" />
+                  Play While Browsing
+                </button>
+
+                {/* Direct Spotify link */}
+                <a
+                  href={active.spotifyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl bg-[#1DB954] hover:bg-[#1ed760] text-white font-medium transition-colors"
+                >
+                  <FaSpotify className="text-lg" />
+                  Open Spotify
+                </a>
+              </div>
 
               {/* Tracklist */}
               {spotifyData?.tracks && spotifyData.tracks.length > 0 && (

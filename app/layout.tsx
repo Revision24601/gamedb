@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { Providers } from './providers';
 import NavigationProgress from '@/components/NavigationProgress';
 import BackgroundAnimation from '@/components/BackgroundAnimation';
+import MiniPlayer from '@/components/MiniPlayer';
 
 const raleway = Raleway({
   subsets: ['latin'],
@@ -36,6 +37,7 @@ export default function RootLayout({
             <NavigationProgress />
           </Suspense>
           {children}
+          <MiniPlayer />
         </Providers>
       </body>
     </html>
