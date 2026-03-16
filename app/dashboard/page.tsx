@@ -64,7 +64,7 @@ export default function Dashboard() {
         const totalGames = allGamesData.games?.length || 0;
         const completedGames = allGamesData.games?.filter((g: any) => g.status === 'Completed').length || 0;
         
-        const validRatings = allGamesData.games?.filter((g: any) => g.rating !== undefined && g.rating !== null);
+        const validRatings = allGamesData.games?.filter((g: any) => g.rating > 0);
         const averageRating = validRatings?.length 
           ? validRatings.reduce((sum: number, g: any) => sum + (g.rating || 0), 0) / validRatings.length 
           : 0;
