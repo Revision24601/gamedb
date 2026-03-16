@@ -13,6 +13,7 @@ import {
   FaBars,
   FaTimes,
   FaDownload,
+  FaUsers,
 } from 'react-icons/fa';
 import SearchBar from './SearchBar';
 import ThemeToggle from './ThemeToggle';
@@ -24,6 +25,7 @@ const Header = () => {
   const navLinks = [
     { href: '/games', label: 'My Games', icon: null },
     { href: '/games/import', label: 'Import', icon: FaDownload },
+    { href: '/blend', label: 'Blend', icon: FaUsers },
     { href: '/dashboard', label: 'Dashboard', icon: FaChartBar },
     { href: '/stats', label: 'Stats', icon: FaChartPie },
     { href: '/mindpalace', label: 'Mind Palace', icon: FaBrain },

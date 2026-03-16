@@ -5,6 +5,8 @@ export interface IUser {
   email: string;
   name: string;
   passwordHash: string;
+  blendCode?: string;
+  friends?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +31,15 @@ const userSchema = new mongoose.Schema<IUser>(
       type: String,
       required: [true, 'Password hash is required'],
     },
+    blendCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    friends: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    }],
   },
   {
     timestamps: true,
