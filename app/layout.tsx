@@ -6,6 +6,7 @@ import { Providers } from './providers';
 import NavigationProgress from '@/components/NavigationProgress';
 import BackgroundAnimation from '@/components/BackgroundAnimation';
 import MiniPlayer from '@/components/MiniPlayer';
+import { Analytics } from '@vercel/analytics/next';
 
 const raleway = Raleway({
   subsets: ['latin'],
@@ -39,6 +40,7 @@ export default function RootLayout({
           {children}
           <MiniPlayer />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
