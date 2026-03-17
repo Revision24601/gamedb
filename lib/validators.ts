@@ -41,6 +41,7 @@ export const gameCreateSchema = z.object({
   imageUrl: z.string().url().optional().nullable(),
   notes: z.string().max(2000, 'Notes are too long').optional().nullable(),
   composer: z.string().max(200, 'Composer name is too long').optional().nullable(),
+  genres: z.array(z.string()).optional().default([]),
   isFavorite: z.boolean().optional().default(false),
 });
 

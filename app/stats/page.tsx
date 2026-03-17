@@ -48,6 +48,7 @@ export default function StatsPage() {
   const [games, setGames] = useState<IGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [genreData, setGenreData] = useState<{ name: string; count: number }[]>([]);
   const [stats, setStats] = useState<GameStats>({
     totalGames: 0,
     totalHours: 0,
@@ -159,20 +160,32 @@ export default function StatsPage() {
         longestPlayedGame,
       });
 
-      // Calculate hours distribution
-      const hoursDistribution = games
-        .filter(game => game.hoursPlayed > 0)
-        .map(game => ({
-          name: game.title,
-          hours: Number(game.hoursPlayed) // Ensure hoursPlayed is converted to a number
-        }))
-        .sort((a, b) => b.hours - a.hours) // Sort by hours in descending order
-        .slice(0, 10); // Get top 10 games by hours played
-
-      // Calculate total hours played
-      const totalHoursPlayed = games.reduce((total, game) => {
-        return total + (Number(game.hoursPlayed) || 0); // Ensure hoursPlayed is converted to a number
-      }, 0);
+      // Calculate genre breakdown
+      const genreCounts: Record<string, number> = {};
+      games.forEach((game: any) => {
+        const genres = game.genres || [];
+        // Also try parsing from notes if genres array is empty
+        if (genres.length === 0 && game.notes) {
+          const match = game.notes.match(/Genres?:\s*(.+)/i);
+          if (match) {
+            match[1].split(',').map((g: string) => g.trim()).filter((g: string) => g && g !== 'Unknown').forEach((g: string) => {
+              genreCounts[g] = (genreCounts[g] || 0) + 1;
+            });
+          }
+        } else {
+          genres.forEach((g: string) => { genreCounts[g] = (genreCounts[g] || 0) + 1; });
+        }
+      });
+      setGenreData(
+        Object.entries(genreCounts)
+          .sort((a, b) => b[1] - a[1])
+          .map(([name, count]) => ({ name, count }))
+      );
+      // Store top genre for adaptive background
+      const topGenre = Object.entries(genreCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+      if (topGenre && typeof window !== 'undefined') {
+        localStorage.setItem('gamedb-top-genre', topGenre);
+      }
     }
   }, [games]);
 
@@ -409,6 +422,41 @@ export default function StatsPage() {
                 </div>
               </div>
             </div>
+
+            {/* Genre Breakdown */}
+            {genreData.length > 0 && (
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                  <FaChartPie className="text-primary-500" />
+                  Genre Breakdown
+                </h2>
+                <div className="space-y-3">
+                  {genreData.slice(0, 10).map((genre, i) => {
+                    const maxCount = genreData[0]?.count || 1;
+                    const pct = Math.round((genre.count / maxCount) * 100);
+                    return (
+                      <div key={genre.name} className="flex items-center gap-3">
+                        <span className="text-xs text-gray-500 w-4 text-right font-mono">{i + 1}</span>
+                        <span className="text-sm text-gray-800 dark:text-gray-200 w-28 truncate">{genre.name}</span>
+                        <div className="flex-1 h-5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary-500/70 rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-400 w-8 text-right">{genre.count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {genreData.length > 0 && (
+                  <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">
+                    Your top genre is <strong className="text-primary-600 dark:text-primary-400">{genreData[0].name}</strong> with {genreData[0].count} games.
+                    {genreData.length >= 3 && ` You also enjoy ${genreData[1].name} and ${genreData[2].name}.`}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Did You Know section */}
             <div className="bg-gradient-to-br from-accent/10 to-accent/5 dark:from-accent/20 dark:to-accent/5 backdrop-blur-sm rounded-xl shadow-sm border border-accent/20 dark:border-accent/30 p-6">

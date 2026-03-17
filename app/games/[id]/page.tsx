@@ -9,6 +9,7 @@ import StarRating from '@/components/StarRating';
 import StatusSelector from '@/components/StatusSelector';
 import { useToast } from '@/components/ToastProvider';
 import SoundtrackSection from '@/components/SoundtrackSection';
+import GameFacts from '@/components/GameFacts';
 import { FaEdit, FaTrash, FaArrowLeft, FaGamepad, FaClock, FaPlus, FaHeart, FaRegHeart } from 'react-icons/fa';
 import type { IGame } from '@/models/Game';
 
@@ -279,6 +280,17 @@ export default function GameDetailPage({ params }: { params: { id: string } }) {
               </div>
             </div>
           </div>
+
+          {/* Fun Facts */}
+          <GameFacts
+            title={game.title}
+            hoursPlayed={game.hoursPlayed || 0}
+            rating={game.rating || 0}
+            status={game.status}
+            platform={game.platform}
+            notes={(game as any).notes}
+            createdAt={game.createdAt}
+          />
 
           {/* Listening Room */}
           <SoundtrackSection
